@@ -9,7 +9,6 @@ Ids are `<stage><n>`, stages following the build order in the design spec.
 
 ## Todo
 
-- [ ] `P1-01` Profile schema and parser
 - [ ] `P1-02` Doc-class resolution, including no-match-is-an-error
 - [ ] `P1-03` Owner resolution: `.agent-owner`, then `git rev-parse --git-common-dir` basename
 - [ ] `P1-04` Path-to-product index, non-overlap checking
@@ -36,5 +35,7 @@ Ids are `<stage><n>`, stages following the build order in the design spec.
 
 ## Done
 
+- [x] `P1-01` Profile schema and parser
+      evidence: bun test skills/lib/profile — 17 pass, includes parsing this repo's own project-profile.yaml
 - [x] `P0-01` Design spec, two gpt-5.5 review rounds
       evidence: docs/specs/2026-08-27-project-management-skills-design.md, commits 81fa509..52d8ad5

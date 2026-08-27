@@ -1,0 +1,37 @@
+{
+    "typescript": {
+        "lineWidth": 80,
+        "indentWidth": 4,
+        "quoteStyle": "preferDouble",
+        "jsx.bracketPosition": "sameLine",
+        "arrayExpression.spaceAround": true,
+        "arrayPattern.spaceAround": true,
+        "tupleType.spaceAround": true,
+        "semiColons": "always",
+        "nextControlFlowPosition": "nextLine",
+        "extendsClause.preferHanging": true
+    },
+    "json": {
+        "indentWidth": 4
+    },
+    "markdown": {},
+    "toml": {},
+    "dockerfile": {},
+    "markup": {},
+    "yaml": {},
+    "graphql": {},
+    "excludes": [
+        "**/node_modules",
+        "**/*-lock.json"
+    ],
+    "plugins": [
+        "https://plugins.dprint.dev/typescript-0.93.3.wasm",
+        "https://plugins.dprint.dev/json-0.19.4.wasm",
+        "https://plugins.dprint.dev/markdown-0.17.8.wasm",
+        "https://plugins.dprint.dev/toml-0.6.4.wasm",
+        "https://plugins.dprint.dev/dockerfile-0.3.2.wasm",
+        "https://plugins.dprint.dev/g-plane/markup_fmt-v0.18.0.wasm",
+        "https://plugins.dprint.dev/g-plane/pretty_yaml-v0.5.0.wasm",
+        "https://plugins.dprint.dev/g-plane/pretty_graphql-v0.2.1.wasm"
+    ]
+}

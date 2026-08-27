@@ -1,11 +1,33 @@
 {
     "name": "@kuindji/project-skills",
     "version": "0.0.0",
-    "private": false,
     "type": "module",
     "description": "Shared project-management rules and validators for agent-driven repos",
     "license": "MIT",
+    "author": "Ivan Kuindzhi",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/kuindji/skills.git"
+    },
     "files": [
         "skills"
-    ]
+    ],
+    "bin": {
+        "project-validate": "./skills/bin/project-validate.ts",
+        "profile-validate": "./skills/bin/profile-validate.ts",
+        "wiki-validate": "./skills/bin/wiki-validate.ts",
+        "docs-validate": "./skills/bin/docs-validate.ts",
+        "docs-freeze": "./skills/bin/docs-freeze.ts",
+        "guard-generated": "./skills/bin/guard-generated.ts"
+    },
+    "scripts": {
+        "test": "bun test",
+        "type-check": "tsc --noEmit",
+        "format": "dprint fmt",
+        "validate": "bun run skills/bin/project-validate.ts"
+    },
+    "devDependencies": {
+        "@types/bun": "latest",
+        "typescript": "^5.9.2"
+    }
 }

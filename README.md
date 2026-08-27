@@ -17,13 +17,13 @@ Status: design complete, nothing implemented. Start at
 for what it holds, because here the skills are the product. `docs/` is
 information about that product.
 
-| Path | Holds |
-| --- | --- |
-| `skills/<name>/SKILL.md` | A skill. The `SKILL.md` is what makes it one. |
-| `skills/templates/` | Files copied into a consuming repo, then owned there. |
-| `skills/lib/`, `skills/bin/` | Implementation and entry points. |
-| `docs/specs/` | Dated design documents. Frozen once shipped. |
-| `docs/wiki/` | How the system works now. Empty until milestone 1. |
+| Path                         | Holds                                                 |
+| ---------------------------- | ----------------------------------------------------- |
+| `skills/<name>/SKILL.md`     | A skill. The `SKILL.md` is what makes it one.         |
+| `skills/templates/`          | Files copied into a consuming repo, then owned there. |
+| `skills/lib/`, `skills/bin/` | Implementation and entry points.                      |
+| `docs/specs/`                | Dated design documents. Frozen once shipped.          |
+| `docs/wiki/`                 | How the system works now. Empty until milestone 1.    |
 
 ## This repo follows its own rules
 

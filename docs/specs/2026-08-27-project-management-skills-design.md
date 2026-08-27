@@ -40,27 +40,27 @@ The evidence that these are unanswered rather than merely undocumented:
 Every rule in this system derives from one question: what is the decay rate of
 this sentence, and what invalidates it.
 
-| Layer | Answers | Tense | Decay | Invalidated by |
-|---|---|---|---|---|
-| Code | how | now | none, it is the truth | nothing |
-| Wiki | why, and where to look | present, rewritten in place | slow if names-only | a migration or a deploy |
-| Docs | what we decided, and when | frozen at its date | none, the date is the disclaimer | nothing |
-| Tracker | what we intend, and is it done | live | not applicable | the work |
-| Checklists | what we observed | append-only | none | a new build |
+| Layer      | Answers                        | Tense                       | Decay                            | Invalidated by          |
+| ---------- | ------------------------------ | --------------------------- | -------------------------------- | ----------------------- |
+| Code       | how                            | now                         | none, it is the truth            | nothing                 |
+| Wiki       | why, and where to look         | present, rewritten in place | slow if names-only               | a migration or a deploy |
+| Docs       | what we decided, and when      | frozen at its date          | none, the date is the disclaimer | nothing                 |
+| Tracker    | what we intend, and is it done | live                        | not applicable                   | the work                |
+| Checklists | what we observed               | append-only                 | none                             | a new build             |
 
 A rule that does not trace to a row of this table does not go in. The table
 lives in `doctrine.md` and every skill links to it rather than restating it.
 
 ### One authoritative home per fact
 
-| Fact | Home |
-|---|---|
-| What we intend to build | tracker, always |
+| Fact                            | Home                         |
+| ------------------------------- | ---------------------------- |
+| What we intend to build         | tracker, always              |
 | Whether a piece of work is done | tracker status, nowhere else |
-| What ships when, in order | roadmap doc, or nothing |
-| Evidence it actually works | in-repo checklist |
-| How it will be built | plan or spec doc |
-| How it works now | wiki |
+| What ships when, in order       | roadmap doc, or nothing      |
+| Evidence it actually works      | in-repo checklist            |
+| How it will be built            | plan or spec doc             |
+| How it works now                | wiki                         |
 
 Other places may **link to or derive from** the authority; they may not restate
 it independently. A roadmap row saying "Done 2026-08-24" is a projection of
@@ -315,12 +315,12 @@ delete contracts while claiming to protect them.
 
 So the enforced ban is narrow:
 
-| Pattern | Severity | Rationale |
-|---|---|---|
-| line numbers and ranges (`file.ts:101-110`) | error | maximum decay, zero value over the bare path |
-| directory trees in prose | error | a rendering of a position, stale on any move |
-| file paths with a code extension | `wiki.path_citations`, default `citation` | genuinely useful as citation, genuinely decaying |
-| snapshot markers (`currently`, `recently`, `as of`) | warn | current-state prose that reads as fact once stale |
+| Pattern                                             | Severity                                  | Rationale                                         |
+| --------------------------------------------------- | ----------------------------------------- | ------------------------------------------------- |
+| line numbers and ranges (`file.ts:101-110`)         | error                                     | maximum decay, zero value over the bare path      |
+| directory trees in prose                            | error                                     | a rendering of a position, stale on any move      |
+| file paths with a code extension                    | `wiki.path_citations`, default `citation` | genuinely useful as citation, genuinely decaying  |
+| snapshot markers (`currently`, `recently`, `as of`) | warn                                      | current-state prose that reads as fact once stale |
 
 Call syntax, fenced code blocks, and bare dates are **not** banned. Em dashes move
 out of the validator and into the housekeeping unslop pass, where a stylistic
@@ -355,14 +355,14 @@ permanent (research reports, privacy policies, branding SVGs, device checklists,
 repro fixtures). A blanket naming rule would have made every one of them a
 violation, which is how a validator gets switched off.
 
-| Class | Naming | Lifecycle | Fold gate |
-|---|---|---|---|
-| `lifecycle` (specs, plans) | `YYYY-MM-DD-topic.md` | yes | yes |
-| `live` (README, roadmap) | free | no, but review-aged | no |
-| `tracker` (in-repo backend only) | free | no, perpetually live | no |
-| `checklists` | free | no, append-only evidence | no |
-| `reference` (research, policies, legal) | free | no, dated by content | no |
-| `assets` | free | not validated | no |
+| Class                                   | Naming                | Lifecycle                | Fold gate |
+| --------------------------------------- | --------------------- | ------------------------ | --------- |
+| `lifecycle` (specs, plans)              | `YYYY-MM-DD-topic.md` | yes                      | yes       |
+| `live` (README, roadmap)                | free                  | no, but review-aged      | no        |
+| `tracker` (in-repo backend only)        | free                  | no, perpetually live     | no        |
+| `checklists`                            | free                  | no, append-only evidence | no        |
+| `reference` (research, policies, legal) | free                  | no, dated by content     | no        |
+| `assets`                                | free                  | not validated            | no        |
 
 **Every file under a docs root must match exactly one class.** No match is an
 error, not a silent pass. Otherwise a stray `docs/baby-sleep-tracker/2026-08-27-sync-plan.md`
@@ -522,15 +522,15 @@ of decay.
 and **states it out loud before starting**, so a wrong reading surfaces in the
 first line.
 
-| | greenfield | mature |
-|---|---|---|
-| wiki update | at milestone boundary | same commit as the change, CI-gated |
-| plans | numbered, written before code | optional; the ticket is the unit |
-| specs | expected per subsystem | only for cross-cutting change |
-| breaking changes | free | need a migration path |
-| refactor | rewrite freely | blast-radius check on consumers first |
-| done means | acceptance evidence | shipped, wiki updated, no regression |
-| tracker | may be in-repo | external, ticket per change |
+|                  | greenfield                    | mature                                |
+| ---------------- | ----------------------------- | ------------------------------------- |
+| wiki update      | at milestone boundary         | same commit as the change, CI-gated   |
+| plans            | numbered, written before code | optional; the ticket is the unit      |
+| specs            | expected per subsystem        | only for cross-cutting change         |
+| breaking changes | free                          | need a migration path                 |
+| refactor         | rewrite freely                | blast-radius check on consumers first |
+| done means       | acceptance evidence           | shipped, wiki updated, no regression  |
+| tracker          | may be in-repo                | external, ticket per change           |
 
 Mode is per-path rather than per-project, so a greenfield subsystem inside
 TheFloorr does not inherit mature ceremony, and a hardened package inside
@@ -569,14 +569,14 @@ dependency is the wrong container for something that has to be edited locally.
 
 ## Validators
 
-| Bin | Checks |
-|---|---|
-| `profile-validate` | schema; owner and product path globs resolve; product paths non-overlapping; at most one `default: true` owner; at most one roadmap per product |
-| `wiki-validate` | a declared but absent or empty `wiki.root` is a warning, not an error, so a greenfield repo can declare its intent before writing pages; otherwise frontmatter, links, symmetry, reachability, size budget, business self-containment, line-number and directory-tree bans, `path_citations` policy with counts always reported, snapshot markers as warnings |
-| `docs-validate` | every file under a docs root matches exactly one class; for `lifecycle`: naming, frontmatter, fold gate, `frozen_body_sha256`, active-doc staleness; for `live`: review age |
-| `docs-freeze` | computes and writes `frozen_body_sha256` when a lifecycle doc ships |
-| `guard-generated` | fails a diff touching `generated_paths`, or writing outside the current owner's scope |
-| `project-validate` | umbrella, runs all of the above |
+| Bin                | Checks                                                                                                                                                                                                                                                                                                                                                        |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `profile-validate` | schema; owner and product path globs resolve; product paths non-overlapping; at most one `default: true` owner; at most one roadmap per product                                                                                                                                                                                                               |
+| `wiki-validate`    | a declared but absent or empty `wiki.root` is a warning, not an error, so a greenfield repo can declare its intent before writing pages; otherwise frontmatter, links, symmetry, reachability, size budget, business self-containment, line-number and directory-tree bans, `path_citations` policy with counts always reported, snapshot markers as warnings |
+| `docs-validate`    | every file under a docs root matches exactly one class; for `lifecycle`: naming, frontmatter, fold gate, `frozen_body_sha256`, active-doc staleness; for `live`: review age                                                                                                                                                                                   |
+| `docs-freeze`      | computes and writes `frozen_body_sha256` when a lifecycle doc ships                                                                                                                                                                                                                                                                                           |
+| `guard-generated`  | fails a diff touching `generated_paths`, or writing outside the current owner's scope                                                                                                                                                                                                                                                                         |
+| `project-validate` | umbrella, runs all of the above                                                                                                                                                                                                                                                                                                                               |
 
 ## Scope and verification
 
@@ -605,17 +605,17 @@ while:
 Verification does not wait for a consuming project. This repo already has the
 shape every validator needs to exercise:
 
-| Under test | Fixture here |
-|---|---|
-| profile schema, single-product root form | `project-profile.yaml` |
-| `lifecycle` doc class, naming, frontmatter | `docs/specs/` |
-| `live` doc class, review age | `README.md` |
-| declared-but-empty wiki | `docs/wiki/` |
-| no-class-match is an error | any stray file under `docs/` |
-| `path_citations: forbidden` | this repo's own setting |
-| in-repo tracker class | `docs/tasks.md` |
-| multi-product, owners, roadmap | checked-in BearingKind profile fixture |
-| dual wiki profiles, external tracker | checked-in TheFloorr profile fixture |
+| Under test                                 | Fixture here                           |
+| ------------------------------------------ | -------------------------------------- |
+| profile schema, single-product root form   | `project-profile.yaml`                 |
+| `lifecycle` doc class, naming, frontmatter | `docs/specs/`                          |
+| `live` doc class, review age               | `README.md`                            |
+| declared-but-empty wiki                    | `docs/wiki/`                           |
+| no-class-match is an error                 | any stray file under `docs/`           |
+| `path_citations: forbidden`                | this repo's own setting                |
+| in-repo tracker class                      | `docs/tasks.md`                        |
+| multi-product, owners, roadmap             | checked-in BearingKind profile fixture |
+| dual wiki profiles, external tracker       | checked-in TheFloorr profile fixture   |
 
 `project-validate` exiting 0 against this repo is the acceptance gate for the
 whole build, and no other repo is touched until it is met. Writing `docs/wiki/` for real is part of it: the wiki that describes
