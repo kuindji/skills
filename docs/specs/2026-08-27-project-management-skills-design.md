@@ -101,33 +101,45 @@ skills path. A template block ships for pasting in.
 
 ## Repo layout
 
-    @kuindji/skills/
-    package.json                    bins: project-validate, profile-validate,
-                                          wiki-validate, docs-validate,
-                                          docs-freeze, guard-generated
-    doctrine.md                     the knowledge map, single source
-    skills/                         markdown only, never executable code
+`skills/` is the source root. It is what another project would call `src/`, named
+for what it actually holds, because in this repo the skills are the product.
+`docs/` is information about that product and nothing else.
+
+    skills/                         (repo root)
+    package.json
+    project-profile.yaml
+    README.md
+    skills/                         THE SOURCE
+      doctrine.md                   the knowledge map, single source
       wiki-authoring/SKILL.md
       project-docs/SKILL.md
       housekeeping/SKILL.md
       task-tracking/SKILL.md        v2; ships as a template in v1
-    templates/
-      project-profile.yaml
+      templates/                    copied into a consuming repo, owned there
+        project-profile.yaml
+        house-rules.md
+        wiki-principles.md
+        AGENTS-block.md
+        task-protocol.md            the v1 form of task-tracking
+      lib/                          implementation
+        wiki/  docs/  profile/  names/
+      bin/                          one thin entry point per declared bin
+    docs/                           INFORMATION ABOUT THE PRODUCT
+      specs/                        dated design documents, frozen once shipped
+      wiki/                         how the system works now; empty until M1
       house-rules.md
-      wiki-principles.md
-      AGENTS-block.md
-      task-protocol.md              the v1 form of task-tracking
-    src/                            all executable code lives here
-      wiki/                         generalized from TheFloorr validate-wiki.ts
-      docs/                         lifecycle and fold-gate checks
-      profile/                      schema, resolution, path ownership
-      names/                        name extraction for housekeeping
-      bin/                          thin entry points, one per declared bin
+
+A skill is a directory containing `SKILL.md`. That is what identifies it, so
+`lib`, `bin` and `templates` sitting alongside are not mistaken for skills by a
+harness scanning the folder.
 
 A skill directory holds `SKILL.md` and nothing else. A skill that needs to run
 something calls a declared bin; it never carries its own script. This keeps every
-executable path in one tree, testable and reachable by any agent, rather than
+executable path in one place, testable and reachable by any agent, rather than
 scattered across skill folders where only a skill-aware harness would find it.
+
+Consuming repos reference skills at
+`node_modules/@kuindji/project-skills/skills/<name>/SKILL.md`.
 
 ## Fixed versus project-local
 

@@ -22,15 +22,16 @@ that cannot type its input is reporting a schema gap, not a TypeScript problem.
 
 ## Code placement
 
-Executable code lives in `src/`. A skill directory holds `SKILL.md` and nothing
-else.
+`skills/` is the source root; `docs/` is information about the product. A skill
+directory holds `SKILL.md` and nothing else, and implementation lives in
+`skills/lib/` with entry points in `skills/bin/`.
 
 **Why:** skills are read by several agents, only some of which understand skill
 packaging. A bin is reachable by all of them and by CI; a script buried in a
 skill folder is reachable only by a skill-aware harness.
 
 **How:** if a skill needs to run something, declare a bin in `package.json`,
-implement it under `src/bin/`, and have the skill call it by name.
+implement it under `skills/bin/`, and have the skill call it by name.
 
 ## Validators
 

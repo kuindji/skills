@@ -13,11 +13,15 @@ Status: design complete, nothing implemented. Start at
 
 ## Layout
 
+`skills/` is the source root. It is what another project would call `src/`, named
+for what it holds, because here the skills are the product. `docs/` is
+information about that product.
+
 | Path | Holds |
 | --- | --- |
-| `skills/` | `SKILL.md` files. Markdown only, never executable code. |
-| `templates/` | Files copied into a consuming repo, then owned and edited there. |
-| `src/` | All executable code, including every declared bin. |
+| `skills/<name>/SKILL.md` | A skill. The `SKILL.md` is what makes it one. |
+| `skills/templates/` | Files copied into a consuming repo, then owned there. |
+| `skills/lib/`, `skills/bin/` | Implementation and entry points. |
 | `docs/specs/` | Dated design documents. Frozen once shipped. |
 | `docs/wiki/` | How the system works now. Empty until milestone 1. |
 
