@@ -243,9 +243,11 @@ export function parseProfile(
             );
         }
         profile.wiki = {
-            root: root ?? "",
+            root: trimSlashes(root ?? ""),
             profiles: stringList(wiki.profiles),
-            businessSubtree: optionalString(wiki.business_subtree),
+            businessSubtree: optionalString(
+                trimSlashes(optionalString(wiki.business_subtree)),
+            ),
             pathCitations: PATH_CITATIONS.includes(citations as PathCitations)
                 ? citations as PathCitations
                 : "citation",
@@ -260,7 +262,7 @@ export function parseProfile(
             globs[cls] = stringList(docs[cls]);
         }
         profile.docs = {
-            root: optionalString(docs.root) ?? "docs",
+            root: trimSlashes(optionalString(docs.root)) ?? "docs",
             globs,
             staleAfterDays: optionalNumber(docs.stale_after_days) ?? 30,
             reviewAfterDays: optionalNumber(docs.review_after_days) ?? 90,
@@ -435,6 +437,20 @@ function lineFinder(source: string): (keyPath: string) => number | undefined {
         }
         return found;
     };
+}
+
+/**
+ * Strip trailing slashes from a directory setting.
+ *
+ * Every rule that reads one of these compares it as a path prefix, and
+ * `business/` never prefixes `business/orders`. Written with the slash the
+ * setting reads correctly to a person and silently switches its rule off, so
+ * the shape is settled here rather than defended at each use.
+ */
+function trimSlashes<T extends string | undefined>(value: T): T {
+    return (typeof value === "string"
+        ? value.replace(/\/+$/, "")
+        : value) as T;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

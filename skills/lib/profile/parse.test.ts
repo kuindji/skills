@@ -182,6 +182,24 @@ wiki:
         expect(d?.remedy).toContain("forbidden");
         expect(d?.remedy).toContain("citation");
     });
+
+    // Every rule reading one of these compares it as a path prefix, and
+    // `business/` prefixes nothing. Written with the slash it reads correctly
+    // to a person and switches its rule off in silence.
+    test("trailing slashes are stripped from directory settings", () => {
+        const result = parse(`
+tracker:
+  backend: clickup
+wiki:
+  root: docs/wiki/
+  business_subtree: business/
+docs:
+  root: docs//
+`);
+        expect(result.profile?.wiki?.root).toBe("docs/wiki");
+        expect(result.profile?.wiki?.businessSubtree).toBe("business");
+        expect(result.profile?.docs?.root).toBe("docs");
+    });
 });
 
 describe("root versus product profiles", () => {

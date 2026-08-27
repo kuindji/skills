@@ -9,7 +9,6 @@ Ids are `<stage><n>`, stages following the build order in the design spec.
 
 ## Todo
 
-- [ ] `P2-01` `wiki-validate`: carried-over graph rules
 - [ ] `P2-02` `wiki-validate`: position bans and `path_citations` policy
 - [ ] `P2-03` `docs-validate`: lifecycle class
 - [ ] `P2-04` `docs-validate`: live, tracker and no-class-match
@@ -31,6 +30,14 @@ Ids are `<stage><n>`, stages following the build order in the design spec.
 
 ## Done
 
+- [x] `P2-01` `wiki-validate`: carried-over graph rules
+      evidence: bun test skills/lib/wiki — 56 pass; and against the corpus it was
+      carried over from, 152 pages and 0 errors, the same counts TheFloorr's own
+      validator reports. The three BearingKind wikis, which never ran it, each
+      report 8 errors, including a `dear-child` placeholder committed as a README
+      child. Reviewed by gpt-5.5; its one reproducible finding, a
+      `business_subtree` written with a trailing slash silently disabling the
+      self-containment rule, is fixed and covered.
 - [x] `P1-07` Repo-root files: root-relative globs, a leading / matches from the repo root
       evidence: bun test skills/lib/docs — README.md classifies as live
 - [x] `P1-06` Dead-glob detection
