@@ -90,9 +90,11 @@ Absence of a roadmap is a valid configuration, not an omission.
 Each consuming repo adds this repo as a bun devDependency by git URL, with no
 registry involved:
 
-    "@kuindji/project-skills": "github:kuindji/skills#v1"
+    "@kuindji/project-skills": "github:kuindji/skills#<tag>"
 
-Skills are readable at `node_modules/@kuindji/project-skills/skills/*/SKILL.md`.
+Consumers pin a git tag so an upgrade is deliberate rather than whatever `main`
+happened to be at install time. Skills are readable at
+`node_modules/@kuindji/project-skills/skills/*/SKILL.md`.
 Validators are package bins, runnable by any agent and by CI.
 
 `AGENTS.md` is the root of the system, because it is the one file every agent
@@ -114,13 +116,12 @@ for what it actually holds, because in this repo the skills are the product.
       wiki-authoring/SKILL.md
       project-docs/SKILL.md
       housekeeping/SKILL.md
-      task-tracking/SKILL.md        v2; ships as a template in v1
+      task-tracking/SKILL.md
       templates/                    copied into a consuming repo, owned there
         project-profile.yaml
         house-rules.md
         wiki-principles.md
         AGENTS-block.md
-        task-protocol.md            the v1 form of task-tracking
       lib/                          implementation
         wiki/  docs/  profile/  names/
       bin/                          one thin entry point per declared bin
@@ -544,58 +545,66 @@ dependency is the wrong container for something that has to be edited locally.
 | `guard-generated` | fails a diff touching `generated_paths`, or writing outside the current owner's scope |
 | `project-validate` | umbrella, runs all of the above |
 
-## v1 scope
+## Scope and verification
 
-Deliberately excluded from v1, each because it costs more than it returns until
-the core has proven itself:
+**Everything in this document is built in one sweep. There is no version gating.**
 
-- Heuristic name extraction and coverage-gap enumeration in housekeeping.
+Codex's round-2 review argued the opposite: that validation infrastructure and
+agent workflow are two products, and that shipping both at once means neither
+lands. That reasoning is sound for a project with users waiting on a release. It
+does not apply here. This project is small, has exactly one consumer to start
+with, and phasing it would cost more in coordination than it saves in risk. A
+half-shipped validator with no skill to invoke it has no audience at all.
+
+The excluded items below stay excluded, not because they are a later phase, but
+because they are not worth building at any point until the core has run for a
+while:
+
+- Heuristic name extraction and coverage-gap enumeration beyond the advisory form.
 - Auto-applying lifecycle transitions or snapshot rewrites.
 - Validating commit messages for tracker ticket references.
 - Blanket bans on call syntax, fenced code blocks and bare dates.
-- Em dashes as a validator rule; it moves to the housekeeping unslop pass.
+- Em dashes as a validator rule; they belong to the housekeeping unslop pass.
 - Lifecycle frontmatter on anything outside the declared `lifecycle` globs.
 
-v1 is **validation infrastructure only**: the profile schema with owners and doc
-classes, owner resolution, the owner and generated-path guards, wiki graph
-validation with the position bans, doc-class validation, and `docs-freeze`.
+### The repo is its own test corpus
 
-The task-tracking protocol ships in v1 as a **template** pasted into AGENTS.md,
-not as a skill with a validator. It is agent workflow rather than validation
-infrastructure, and bundling the two makes v1 two products at once. It becomes a
-real skill in v2, once the profile it depends on has stopped moving.
+Verification does not wait for a consuming project. This repo already has the
+shape every validator needs to exercise:
 
-## This repo is its own first subject
+| Under test | Fixture here |
+|---|---|
+| profile schema, single-product root form | `project-profile.yaml` |
+| `lifecycle` doc class, naming, frontmatter | `docs/specs/` |
+| `live` doc class, review age | `README.md` |
+| declared-but-empty wiki | `docs/wiki/` |
+| no-class-match is an error | any stray file under `docs/` |
+| `path_citations: forbidden` | this repo's own setting |
 
-The skills repo adopts its own rules from the first commit. It carries a root
-`project-profile.yaml`, a `docs/house-rules.md`, and `docs/specs/` as its
-`lifecycle` class, which this document already satisfies. `wiki.root` is declared
-and empty until the first milestone, which is what greenfield mode prescribes.
+`project-validate` exiting 0 against this repo is the acceptance gate for the
+whole build. Writing `docs/wiki/` for real is part of it: the wiki that describes
+this system doubles as the corpus `wiki-validate` is tested against, and a
+validator whose author could not write a passing page against it is not finished.
 
-This is not symmetry for its own sake. Applying the schema to this repo before
-writing a line of it already found two gaps: the root profile's shape when it
-acts as the default product was never specified, and nothing said whether a
-declared-but-empty `wiki.root` is legal. Both are now fixed above. Every repo
-adopted afterwards is a chance to find more, which is the argument for adopting
-this one first and hardest.
-
-The profile also fixes `path_citations: forbidden` here. A repo whose subject is
-the rule has no excuse for citing paths.
+Only after that do the test sessions against real repos begin, in the adoption
+order below.
 
 ## Build order
 
-This is too large for one implementation plan. Three, each independently useful:
+Not phases, dependency order within one sweep.
 
-1. **Profile and validators.** `profile-validate`, `wiki-validate`,
-   `docs-validate`, `guard-generated`, `project-validate`, plus `doctrine.md`
-   and the four templates. Ends with TheFloorr's wiki passing the carried-over
-   rules and producing a location-ban worklist. Nothing agent-facing yet, and
-   already worth having.
-2. **The three authoring skills.** `wiki-authoring`, `project-docs`,
-   `task-tracking`, plus the AGENTS.md block. Thin prose over validators that
-   already exist.
-3. **Housekeeping.** Contract extraction, the drift worklist, coverage gaps, the
-   sweep. Depends on both prior phases and is the least certain, so it is last.
+1. **Profile.** Schema, owner resolution including the `.agent-owner` and
+   common-dir fallback, the path-to-product index, doc-class resolution.
+   Everything else reads this.
+2. **Validators.** `wiki-validate`, `docs-validate`, `docs-freeze`,
+   `guard-generated`, and the `project-validate` umbrella.
+3. **Skills and templates.** `doctrine.md`, the four `SKILL.md` files, and the
+   templates copied into consuming repos. Thin prose over validators that by now
+   exist.
+4. **Housekeeping.** The drift worklist and the sweep. Depends on all of the
+   above, and is the least certain, so it lands last.
+5. **This repo's wiki.** Written against the finished rules, as the acceptance
+   gate described above.
 
 ## Adoption
 
