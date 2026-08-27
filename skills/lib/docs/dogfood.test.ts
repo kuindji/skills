@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { parseProfile } from "../profile/parse";
-import { scanDocs } from "./scan";
+import { scanDocs, validateDocs } from "./scan";
 
 /**
  * Classification has to hold against this repo before it is pointed at anyone
@@ -51,6 +51,16 @@ describe("this repo's docs classify cleanly", () => {
                 "docs/specs/2026-08-27-project-management-skills-design.md",
             ),
         ).toBe("lifecycle");
+    });
+
+    test("this repo's own spec passes the lifecycle rules", async () => {
+        const file = `${root}project-profile.yaml`;
+        const { profile } = parseProfile(await Bun.file(file).text(), file);
+        const result = await validateDocs(profile!, root);
+        expect(result.lifecycle.map((doc) => doc.path)).toEqual([
+            "docs/specs/2026-08-27-project-management-skills-design.md",
+        ]);
+        expect(result.diagnostics).toEqual([]);
     });
 
     test("wiki pages are not given doc classes", async () => {

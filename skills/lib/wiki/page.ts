@@ -12,10 +12,10 @@
  * was pointed at tells the reader nothing.
  */
 
+import { parseFrontmatter } from "../markdown/frontmatter";
+
 /** Matches `[[slug]]` and `[[slug|label]]`; capture group 1 is the slug. */
 export const WIKILINK_RE = /\[\[([^\]|\n]+)(?:\|[^\]\n]*)?\]\]/g;
-
-const FRONTMATTER_RE = /^---\r?\n([\s\S]*?)\r?\n---[ \t]*(?:\r?\n|$)/;
 
 /** The five keys a page may carry. Anything else is a violation. */
 export const FRONTMATTER_KEYS = [
@@ -57,44 +57,14 @@ export function parseWikiPage(
     slug: string,
     path: string,
 ): WikiPage {
-    // A byte-order mark before the opening delimiter would leave the block
-    // unrecognised, and the page would be reported as missing every field it
-    // visibly has.
-    const source = raw.charCodeAt(0) === 0xFEFF ? raw.slice(1) : raw;
-    const match = FRONTMATTER_RE.exec(source);
-    if (!match) {
-        return {
-            slug,
-            path,
-            frontmatter: {},
-            body: source,
-            bodyStartLine: 1,
-            frontmatterLines: {},
-        };
-    }
-
-    const block = match[1] ?? "";
-    let parsed: unknown;
-    try {
-        parsed = Bun.YAML.parse(block);
-    }
-    catch {
-        parsed = undefined;
-    }
-    const frontmatter =
-        typeof parsed === "object" && parsed !== null && !Array.isArray(parsed)
-            ? parsed as Record<string, unknown>
-            : {};
-
+    const { values, body, bodyStartLine, lines } = parseFrontmatter(raw);
     return {
         slug,
         path,
-        frontmatter,
-        body: source.slice(match[0].length),
-        // The block opens on line 1, so its first key is on line 2 and the
-        // body starts one line past the closing delimiter.
-        bodyStartLine: countLines(match[0]) + 1,
-        frontmatterLines: keyLines(block),
+        frontmatter: values,
+        body,
+        bodyStartLine,
+        frontmatterLines: lines,
     };
 }
 
@@ -300,10 +270,6 @@ function findRun(line: string, from: number, length: number): number {
         i += run;
     }
     return -1;
-}
-
-function countLines(text: string): number {
-    return text.split("\n").length - 1;
 }
 
 /** 1-based line of each top-level key in a frontmatter block. */

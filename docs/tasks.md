@@ -9,7 +9,6 @@ Ids are `<stage><n>`, stages following the build order in the design spec.
 
 ## Todo
 
-- [ ] `P2-03` `docs-validate`: lifecycle class
 - [ ] `P2-04` `docs-validate`: live, tracker and no-class-match
 - [ ] `P2-05` `docs-freeze`
 - [ ] `P2-06` `guard-generated`
@@ -29,6 +28,14 @@ Ids are `<stage><n>`, stages following the build order in the design spec.
 
 ## Done
 
+- [x] `P2-03` `docs-validate`: lifecycle class
+      evidence: bun test skills/lib/docs — 73 pass, incl. real git repositories
+      built for the merge-commit, non-ASCII-path and shallow-clone cases. Against
+      BearingKind's detector docs: 6 lifecycle documents found, all correctly
+      date-named, each reporting exactly one missing-frontmatter error, because
+      those real specs and plans carry status in bold prose and nothing marks the
+      moment they stopped being open. Against this repo: 1 doc, 0 diagnostics.
+      gpt-5.5 review found three bypasses, all reproduced before fixing.
 - [x] `P2-02` `wiki-validate`: position bans and `path_citations` policy
       evidence: bun test skills/lib/wiki — 104 pass. Calibrated against the real
       corpora: 200 line-number errors on 21 of TheFloorr's 152 pages, matching an
