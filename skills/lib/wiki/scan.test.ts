@@ -91,6 +91,26 @@ describe("a wiki with real violations", () => {
         expect(unreachable?.file).toBe(`${fixtures}/broken/beta.md`);
     });
 
+    test("a line number and a tree are caught on disk", async () => {
+        const positions = (await found()).filter(
+            (d) => d.file.endsWith("positions.md"),
+        );
+        expect(positions.map((d) => d.rule).sort()).toEqual([
+            "wiki.directoryTree",
+            "wiki.lineNumber",
+            "wiki.snapshot",
+        ]);
+    });
+
+    test("path references are counted even where the policy allows them", async () => {
+        const { pathCitations, pagesWithPathCitations } = await validateWiki(
+            profile,
+            repoRoot,
+        );
+        expect(pathCitations).toBe(1);
+        expect(pagesWithPathCitations).toBe(1);
+    });
+
     test("every diagnostic names a file and says what to do", async () => {
         for (const diagnostic of await found()) {
             expect(diagnostic.file).not.toBe("");

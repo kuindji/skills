@@ -98,6 +98,81 @@ export function parseWikiPage(
     };
 }
 
+/** One line of a page body, split into what it is written as and what it says. */
+export interface BodyLine {
+    /** 1-based line number in the file. */
+    line: number;
+    /** The line as written, code and all. */
+    raw: string;
+    /**
+     * The line with fenced code blanked out, inline spans kept.
+     *
+     * This is the view for anything measuring what a page cites, because the
+     * citation convention these rules exist to measure is written in inline
+     * code: of 1100 file-path references in one real wiki, 1065 sit inside
+     * backticks and 5 inside fences. Masking inline code would make the rule
+     * blind to almost every occurrence it was written to find.
+     */
+    text: string;
+    /**
+     * `text` with inline spans blanked out too.
+     *
+     * The view for anything reading the page as English. Code is masked
+     * rather than dropped so a column in the masked line is a column in the
+     * real one.
+     */
+    prose: string;
+}
+
+/**
+ * The body, line by line, with code separated from prose.
+ *
+ * Every rule that reads a page has to decide whether code counts, and they do
+ * not all answer the same way. A wikilink inside a fence is an example rather
+ * than an edge. A directory tree inside a fence is exactly the thing being
+ * banned. A file path inside backticks is the citation convention itself,
+ * while the same path inside a fence is part of a command someone runs.
+ * Splitting the views here lets each rule say which it means, instead of each
+ * rule reimplementing Markdown and getting a different answer.
+ */
+export function bodyLines(page: WikiPage): BodyLine[] {
+    const out: BodyLine[] = [];
+    const lines = page.body.split("\n");
+    let fence: string | undefined;
+
+    for (let i = 0; i < lines.length; i++) {
+        const raw = lines[i] ?? "";
+        const marker = fenceMarker(raw);
+        let inCode = fence !== undefined;
+
+        if (fence !== undefined) {
+            // A closing fence is the same character, at least as long, and
+            // carries no info string.
+            if (
+                marker !== undefined && marker[0] === fence[0]
+                && marker.length >= fence.length
+                && raw.trimEnd().endsWith(marker)
+            ) {
+                fence = undefined;
+            }
+        }
+        else if (marker !== undefined) {
+            fence = marker;
+            inCode = true;
+        }
+
+        const text = inCode ? " ".repeat(raw.length) : raw;
+        out.push({
+            line: page.bodyStartLine + i,
+            raw,
+            text,
+            prose: maskInlineCode(text),
+        });
+    }
+
+    return out;
+}
+
 /**
  * Every `[[slug]]` in the body, in order, with absolute line numbers.
  *
@@ -111,38 +186,14 @@ export function parseWikiPage(
  */
 export function bodyLinks(page: WikiPage): WikiLink[] {
     const links: WikiLink[] = [];
-    const lines = page.body.split("\n");
-    let fence: string | undefined;
-
-    for (let i = 0; i < lines.length; i++) {
-        const raw = lines[i] ?? "";
-        const marker = fenceMarker(raw);
-
-        if (fence !== undefined) {
-            // A closing fence is the same character, at least as long, and
-            // carries no info string.
-            if (
-                marker !== undefined && marker[0] === fence[0]
-                && marker.length >= fence.length
-                && raw.trimEnd().endsWith(marker)
-            ) {
-                fence = undefined;
-            }
-            continue;
-        }
-        if (marker !== undefined) {
-            fence = marker;
-            continue;
-        }
-
-        for (const match of maskInlineCode(raw).matchAll(WIKILINK_RE)) {
+    for (const { line, prose } of bodyLines(page)) {
+        for (const match of prose.matchAll(WIKILINK_RE)) {
             const target = (match[1] ?? "").trim();
             if (target.length > 0) {
-                links.push({ target, line: page.bodyStartLine + i });
+                links.push({ target, line });
             }
         }
     }
-
     return links;
 }
 
@@ -177,20 +228,78 @@ export function isWikiPage(wikiRelativePath: string): boolean {
     return slug !== "PRINCIPLES" && slug !== "wiki-principles";
 }
 
-/** The opening or closing run of a code fence, if this line is one. */
+/**
+ * The opening or closing run of a code fence, if this line is one.
+ *
+ * Any indentation counts, not Markdown's three-space limit for a top-level
+ * fence. A fence inside a list item is indented to the list's content column,
+ * commonly four spaces, and reading that as prose leaks whatever the block
+ * holds: a `grep -n src/x.ts:12` in a numbered step would be reported as a
+ * line-number citation. Four-space content is a Markdown indented code block
+ * in its own right, so nothing legible as prose is lost either way.
+ */
 function fenceMarker(line: string): string | undefined {
-    return /^ {0,3}(`{3,}|~{3,})/.exec(line)?.[1];
+    return /^\s*(`{3,}|~{3,})/.exec(line)?.[1];
 }
 
 /**
  * Blank out inline code spans, keeping the line's length so nothing else
- * shifts. Backtick runs pair by length, the way Markdown pairs them.
+ * shifts.
+ *
+ * Backtick runs pair by length, the way Markdown pairs them: a span opens with
+ * a run of n and closes at the next run of exactly n, and shorter runs inside
+ * are content. A regex cannot express that, and the version that tried read
+ * ``use `x` then [[ghost]]`` as prose and reported the wikilink inside it as a
+ * broken edge. An unpaired run opens nothing and is left alone.
  */
 function maskInlineCode(line: string): string {
-    return line.replace(
-        /(`+)([^`]*?)\1/g,
-        (match) => " ".repeat(match.length),
-    );
+    const out = [ ...line ];
+    let i = 0;
+
+    while (i < line.length) {
+        if (line[i] !== "`") {
+            i++;
+            continue;
+        }
+        const open = runLength(line, i);
+        const close = findRun(line, i + open, open);
+        if (close === -1) {
+            i += open;
+            continue;
+        }
+        for (let k = i; k < close + open; k++) {
+            out[k] = " ";
+        }
+        i = close + open;
+    }
+
+    return out.join("");
+}
+
+/** How many backticks start at `from`. */
+function runLength(line: string, from: number): number {
+    let n = 0;
+    while (line[from + n] === "`") {
+        n++;
+    }
+    return n;
+}
+
+/** Index of the next run of exactly `length` backticks, or -1. */
+function findRun(line: string, from: number, length: number): number {
+    let i = from;
+    while (i < line.length) {
+        if (line[i] !== "`") {
+            i++;
+            continue;
+        }
+        const run = runLength(line, i);
+        if (run === length) {
+            return i;
+        }
+        i += run;
+    }
+    return -1;
 }
 
 function countLines(text: string): number {

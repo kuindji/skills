@@ -9,7 +9,6 @@ Ids are `<stage><n>`, stages following the build order in the design spec.
 
 ## Todo
 
-- [ ] `P2-02` `wiki-validate`: position bans and `path_citations` policy
 - [ ] `P2-03` `docs-validate`: lifecycle class
 - [ ] `P2-04` `docs-validate`: live, tracker and no-class-match
 - [ ] `P2-05` `docs-freeze`
@@ -30,6 +29,17 @@ Ids are `<stage><n>`, stages following the build order in the design spec.
 
 ## Done
 
+- [x] `P2-02` `wiki-validate`: position bans and `path_citations` policy
+      evidence: bun test skills/lib/wiki — 104 pass. Calibrated against the real
+      corpora: 200 line-number errors on 21 of TheFloorr's 152 pages, matching an
+      independent grep of the same pattern exactly, and 1105 path references on
+      107 pages reported as a count because that project sanctions them; 50
+      path-citation errors on Riskore, which forbids them; the tree rule verified
+      against a real 31-row tree in BearingKind's APP_ARCHITECTURE.md.
+      Measuring, rather than guessing, is what found every false positive: the
+      first version masked inline code and so saw 7 of the 200 line numbers,
+      because 1065 of 1100 path references in that wiki live inside backticks.
+      gpt-5.5 review found five more, all reproduced before fixing.
 - [x] `P2-01` `wiki-validate`: carried-over graph rules
       evidence: bun test skills/lib/wiki — 56 pass; and against the corpus it was
       carried over from, 152 pages and 0 errors, the same counts TheFloorr's own

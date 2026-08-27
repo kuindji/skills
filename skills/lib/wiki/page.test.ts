@@ -138,9 +138,37 @@ describe("body links", () => {
         expect(bodyLinks(parsed)).toEqual([ { target: "b", line: 4 } ]);
     });
 
+    // Backtick runs pair by length: shorter runs inside a longer span are
+    // content, not delimiters.
+    test("a shorter run inside a longer span does not end it", () => {
+        const parsed = page(
+            "---\ntitle: T\n---\nThe literal is `` use `x` then [[ghost]] ``.\n",
+        );
+        expect(bodyLinks(parsed)).toEqual([]);
+    });
+
     test("an unpaired backtick opens nothing", () => {
         const parsed = page("---\ntitle: T\n---\nA ` tick and [[a]].\n");
         expect(bodyLinks(parsed)).toEqual([ { target: "a", line: 4 } ]);
+    });
+
+    test("a fence indented inside a list item is still a fence", () => {
+        const parsed = page(
+            [
+                "---",
+                "title: T",
+                "---",
+                "1. Run it:",
+                "",
+                "    ```bash",
+                "    grep -n [[services]] src/x.ts",
+                "    ```",
+                "",
+                "Then see [[data]].",
+                "",
+            ].join("\n"),
+        );
+        expect(bodyLinks(parsed)).toEqual([ { target: "data", line: 10 } ]);
     });
 
     test("an empty target is not a link", () => {
