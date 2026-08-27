@@ -1,0 +1,41 @@
+# BearingKind: one repository, four products, cloned once per product.
+# Each clone may only write inside the paths its owner claims.
+
+wiki:
+  root: docs/wiki
+  profiles: [technical]
+  path_citations: citation
+
+tracker:
+  backend: linear
+
+taskflow:
+  enabled: true
+
+house_rules: docs/house-rules.md
+
+generated_paths:
+  - "apps/*/ios/**"
+  - "apps/*/android/**"
+  - "**/expo-env.d.ts"
+  - "**/.expo/types/router.d.ts"
+
+owners:
+  # "everything not owned by another clone" is a complement, which no union
+  # of globs can state. default: true is how it is expressed.
+  main:
+    paths:
+      [packages/ui, apps/ui-showcase, web, docs/wiki, docs/specs, scripts]
+    shared: true
+    default: true
+  baby-sleep:
+    paths:
+      [
+        apps/baby-sleep-tracker,
+        "packages/sleep-*",
+        docs/baby-sleep-tracker,
+      ]
+  detector-game:
+    paths: [apps/detector, apps/game, docs/detector, docs/game]
+  relocant:
+    paths: [backend/relocant, docs/relocant]

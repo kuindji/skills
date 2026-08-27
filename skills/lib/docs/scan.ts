@@ -1,5 +1,9 @@
 import type { Profile } from "../profile/types";
-import { classifyDocPaths, type ClassifyResult } from "./classify";
+import {
+    classifyDocPaths,
+    type ClassifyOptions,
+    type ClassifyResult,
+} from "./classify";
 
 /**
  * List the repo's files as git sees them.
@@ -30,7 +34,8 @@ export async function listRepoFiles(repoRoot: string): Promise<string[]> {
 export async function scanDocs(
     profile: Profile,
     repoRoot: string,
+    options: ClassifyOptions = { reportDeadGlobs: true },
 ): Promise<ClassifyResult> {
     const paths = await listRepoFiles(repoRoot);
-    return classifyDocPaths(profile, paths);
+    return classifyDocPaths(profile, paths, options);
 }

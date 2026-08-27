@@ -183,3 +183,48 @@ wiki:
         expect(d?.remedy).toContain("citation");
     });
 });
+
+describe("root versus product profiles", () => {
+    test("a product profile need not repeat the tracker backend", () => {
+        const result = parseProfile(
+            "product: p\npaths: [apps/p]\n",
+            "/repo/docs/p/project-profile.yaml",
+            { kind: "product" },
+        );
+        expect(result.diagnostics).toEqual([]);
+        expect(result.profile?.product).toBe("p");
+    });
+
+    test("a product profile may name its tracker project", () => {
+        const result = parseProfile(
+            "product: p\npaths: [apps/p]\ntracker:\n  project: Board\n",
+            "/repo/docs/p/project-profile.yaml",
+            { kind: "product" },
+        );
+        expect(result.diagnostics).toEqual([]);
+        expect(result.profile?.tracker.project).toBe("Board");
+    });
+
+    test("a product profile declaring a wiki is an error", () => {
+        const result = parseProfile(
+            "product: p\npaths: [apps/p]\nwiki:\n  root: docs/wiki\n",
+            "/repo/docs/p/project-profile.yaml",
+            { kind: "product" },
+        );
+        const d = result.diagnostics.find(
+            (d) => d.rule === "schema.rootOnlyKey",
+        );
+        expect(d).toBeDefined();
+        expect(d?.remedy).toContain("root project-profile.yaml");
+    });
+
+    test("a root profile still requires a tracker backend", () => {
+        const result = parseProfile(
+            "product: p\n",
+            "/repo/project-profile.yaml",
+        );
+        expect(
+            result.diagnostics.some((d) => d.rule === "tracker.backend"),
+        ).toBe(true);
+    });
+});

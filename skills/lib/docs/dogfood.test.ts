@@ -22,7 +22,24 @@ describe("this repo's docs classify cleanly", () => {
 
     test("every file under docs/ matches exactly one class", async () => {
         const result = await scan();
-        expect(result.diagnostics).toEqual([]);
+        const errors = result.diagnostics.filter(
+            (d) => d.severity === "error",
+        );
+        expect(errors).toEqual([]);
+    });
+
+    test("no declared glob is dead", async () => {
+        const result = await scan();
+        const dead = result.diagnostics.filter(
+            (d) => d.rule === "docs.deadGlob",
+        );
+        expect(dead).toEqual([]);
+    });
+
+    test("the repo-root README is classified live", async () => {
+        const { files } = await scan();
+        const byPath = new Map(files.map((f) => [ f.path, f.docClass ]));
+        expect(byPath.get("README.md")).toBe("live");
     });
 
     test("the spec is lifecycle and the tracker is tracker", async () => {

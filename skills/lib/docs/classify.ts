@@ -16,6 +16,16 @@ export interface ClassifyResult {
     diagnostics: Diagnostic[];
 }
 
+export interface ClassifyOptions {
+    /**
+     * Report declared globs that matched nothing.
+     *
+     * Only meaningful when the caller passed every file in the repo. A partial
+     * list would make most globs look dead.
+     */
+    reportDeadGlobs?: boolean;
+}
+
 /**
  * Assign every file under the docs root to exactly one declared class.
  *
@@ -30,6 +40,7 @@ export interface ClassifyResult {
 export function classifyDocPaths(
     profile: Profile,
     repoRelativePaths: string[],
+    options: ClassifyOptions = {},
 ): ClassifyResult {
     const diagnostics: Diagnostic[] = [];
     const files: ClassifiedDoc[] = [];
@@ -63,6 +74,33 @@ export function classifyDocPaths(
         });
     }
 
+    // A glob written with a leading slash is repo-root-relative, which is how
+    // a file outside the docs tree gets a class. The repo's front door,
+    // README.md and AGENTS.md, is a live document by nature but does not live
+    // under docs/. Without this it would be silently unvalidated.
+    const isRootRelative = (pattern: string) => pattern.startsWith("/");
+    const matchedGlobs = new Set<string>();
+    const classify = (relative: string, rootRelative: string) => {
+        return DOC_CLASSES.filter((docClass) =>
+            docs.globs[docClass].some((pattern) => {
+                const subject = isRootRelative(pattern)
+                    ? rootRelative
+                    : relative;
+                const target = isRootRelative(pattern)
+                    ? pattern.slice(1)
+                    : pattern;
+                if (subject === undefined) {
+                    return false;
+                }
+                const hit = new Bun.Glob(target).match(subject);
+                if (hit) {
+                    matchedGlobs.add(`${docClass}:${pattern}`);
+                }
+                return hit;
+            })
+        );
+    };
+
     const docsPrefix = withTrailingSlash(docs.root);
     // The wiki has its own validator and its own rules. When it sits inside
     // the docs root, as it usually does, classifying its pages would demand a
@@ -71,8 +109,27 @@ export function classifyDocPaths(
         ? withTrailingSlash(profile.wiki.root)
         : undefined;
 
+    // Files outside the docs root are classified only when a root-relative
+    // glob names them. They are never swept for "matches no class": that rule
+    // governs the docs tree, and applying it repo-wide would demand a class
+    // for every source file.
     for (const path of repoRelativePaths) {
         if (!path.startsWith(docsPrefix)) {
+            const matched = classify("", path);
+            if (matched.length === 1) {
+                files.push({ path, docClass: matched[0]! });
+            }
+            else if (matched.length > 1) {
+                diagnostics.push({
+                    file,
+                    keyPath: "docs",
+                    rule: "docs.ambiguous",
+                    message: `\`${path}\` matches more than one doc class: `
+                        + `${matched.join(", ")}.`,
+                    remedy: "Narrow the globs so exactly one class claims it.",
+                    severity: "error",
+                });
+            }
             continue;
         }
         if (wikiPrefix !== undefined && path.startsWith(wikiPrefix)) {
@@ -80,11 +137,7 @@ export function classifyDocPaths(
         }
 
         const relative = path.slice(docsPrefix.length);
-        const matched = DOC_CLASSES.filter((docClass) =>
-            docs.globs[docClass].some((pattern) =>
-                new Bun.Glob(pattern).match(relative)
-            )
-        );
+        const matched = classify(relative, path);
 
         if (matched.length === 0) {
             diagnostics.push({
@@ -136,6 +189,33 @@ export function classifyDocPaths(
                     + "ids, states, and the evidence line Done requires.",
                 severity: "error",
             });
+        }
+    }
+
+    // A glob that matches nothing looks like coverage and provides none. This
+    // repo shipped `live: ["README.md"]`, which resolved under the docs root
+    // and so matched no file at all, while reading as though the README were
+    // covered.
+    if (options.reportDeadGlobs) {
+        for (const docClass of DOC_CLASSES) {
+            for (const pattern of docs.globs[docClass]) {
+                if (matchedGlobs.has(`${docClass}:${pattern}`)) {
+                    continue;
+                }
+                diagnostics.push({
+                    file,
+                    keyPath: `docs.${docClass}`,
+                    rule: "docs.deadGlob",
+                    message:
+                        `The \`${docClass}\` glob \`${pattern}\` matches no `
+                        + "file.",
+                    remedy:
+                        "Remove it, or correct it. Globs resolve relative to "
+                        + `the docs root (\`${docs.root}\`); prefix with \`/\` `
+                        + "to match from the repo root instead.",
+                    severity: "warning",
+                });
+            }
         }
     }
 

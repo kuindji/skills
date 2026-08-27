@@ -1,0 +1,31 @@
+# TheFloorr: single product, mature, ships continuously.
+# No roadmap, because there is no discrete release event to sequence toward.
+
+wiki:
+  root: docs/wiki
+  profiles: [business, technical]
+  # Ships alone inside the ai-assistant Lambda, so it may not link outward.
+  business_subtree: business
+  # A deliberate parenthetical citation convention across many pages.
+  path_citations: citation
+
+tracker:
+  backend: clickup
+
+taskflow:
+  enabled: true
+
+house_rules: docs/house-rules.md
+
+generated_paths:
+  - "hasura/**/*.yaml"
+
+docs:
+  root: docs
+  lifecycle: ["specs/*.md"]
+  live: ["README.md"]
+  reference: ["handover/**", "awin/**"]
+  ignored: ["superpowers/**"]
+
+mode:
+  default: mature

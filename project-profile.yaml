@@ -19,8 +19,10 @@ generated_paths: []
 
 docs:
   root: docs
-  lifecycle: ["specs/*.md", "plans/*.md"]
-  live: ["house-rules.md"] # perpetually current, review-aged
+  lifecycle: ["specs/*.md"]
+  # A leading / makes a glob repo-root-relative, which is how the front door
+  # gets a class without living under docs/.
+  live: ["house-rules.md", "/README.md"]
   tracker: ["tasks.md"]
   checklists: []
   reference: []

@@ -143,3 +143,46 @@ describe("no docs configured", () => {
         expect(result.files).toEqual([]);
     });
 });
+
+describe("dead globs", () => {
+    test("a glob matching nothing is a warning when the scan is complete", () => {
+        const result = classifyDocPaths(STANDARD, [ "docs/README.md" ], {
+            reportDeadGlobs: true,
+        });
+        const dead = result.diagnostics.filter(
+            (d) => d.rule === "docs.deadGlob",
+        );
+        expect(dead.length).toBeGreaterThan(0);
+        expect(dead[0]?.severity).toBe("warning");
+        expect(dead[0]?.remedy).toContain("docs");
+    });
+
+    test("dead globs are not reported for a partial path list", () => {
+        const result = classifyDocPaths(STANDARD, [ "docs/README.md" ]);
+        expect(
+            result.diagnostics.some((d) => d.rule === "docs.deadGlob"),
+        ).toBe(false);
+    });
+});
+
+describe("root-relative globs", () => {
+    const withRoot = profileFrom(`
+tracker:
+  backend: clickup
+docs:
+  root: docs
+  live: ["/README.md", "/AGENTS.md"]
+  lifecycle: ["specs/*.md"]
+`);
+
+    test("a leading slash matches from the repo root", () => {
+        const result = classifyDocPaths(withRoot, [ "README.md" ]);
+        expect(result.files[0]?.docClass).toBe("live");
+    });
+
+    test("a file outside docs with no root glob is not swept for a class", () => {
+        const result = classifyDocPaths(withRoot, [ "skills/lib/thing.ts" ]);
+        expect(result.diagnostics).toEqual([]);
+        expect(result.files).toEqual([]);
+    });
+});

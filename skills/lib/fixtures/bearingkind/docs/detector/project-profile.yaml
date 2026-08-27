@@ -1,0 +1,10 @@
+product: detector
+paths: [apps/detector, apps/game]
+
+mode:
+  default: greenfield
+
+docs:
+  root: docs/detector
+  lifecycle: ["specs/*.md", "plans/*.md"]
+  live: ["README.md"]

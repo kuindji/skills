@@ -32,6 +32,30 @@ const TOP_LEVEL_KEYS = new Set([
     "mode",
 ]);
 
+/**
+ * Keys that configure the repository rather than one product.
+ *
+ * A product profile that set these would be claiming authority over the whole
+ * repo from inside one product's folder, which is how two products end up
+ * disagreeing about where the wiki is.
+ */
+const ROOT_ONLY_KEYS = new Set([
+    "wiki",
+    "owners",
+    "generated_paths",
+    "house_rules",
+    "taskflow",
+]);
+
+export interface ParseOptions {
+    /**
+     * Root profiles configure the repository and, in a single-product repo,
+     * the product too. Product profiles configure one product and inherit the
+     * rest, so they are not required to repeat repo-wide settings.
+     */
+    kind?: "root" | "product";
+}
+
 export interface ParseResult {
     /** Absent when the document could not be parsed at all. */
     profile?: Profile;
@@ -45,7 +69,12 @@ export interface ParseResult {
  * malformed document is a diagnostic like any other: the tool whose job is
  * reporting schema problems must not crash on one.
  */
-export function parseProfile(source: string, file: string): ParseResult {
+export function parseProfile(
+    source: string,
+    file: string,
+    options: ParseOptions = {},
+): ParseResult {
+    const kind = options.kind ?? "root";
     const diagnostics: Diagnostic[] = [];
     const at = lineFinder(source);
 
@@ -103,6 +132,18 @@ export function parseProfile(source: string, file: string): ParseResult {
     // reported rather than ignored. Silently dropping `wikki:` would leave a
     // repo believing it had configured a wiki it had not.
     for (const key of Object.keys(raw)) {
+        if (kind === "product" && ROOT_ONLY_KEYS.has(key)) {
+            add(
+                key,
+                "schema.rootOnlyKey",
+                `\`${key}\` configures the whole repository, but this is a `
+                    + "product profile.",
+                `Move \`${key}\` to the root project-profile.yaml. A product `
+                    + "profile carries only what differs per product: docs, "
+                    + "mode, roadmap, paths and tracker.project.",
+            );
+            continue;
+        }
         if (!TOP_LEVEL_KEYS.has(key)) {
             add(
                 key,
@@ -132,12 +173,18 @@ export function parseProfile(source: string, file: string): ParseResult {
     const tracker = isRecord(raw.tracker) ? raw.tracker : {};
     const backend = optionalString(tracker.backend);
     if (backend === undefined) {
-        add(
-            "tracker.backend",
-            "tracker.backend",
-            "No tracker backend is set.",
-            `Set tracker.backend to one of: ${TRACKER_BACKENDS.join(", ")}.`,
-        );
+        // A product profile inherits the backend from the root profile. Only
+        // the root has to say where issue state lives.
+        if (kind === "root") {
+            add(
+                "tracker.backend",
+                "tracker.backend",
+                "No tracker backend is set.",
+                `Set tracker.backend to one of: ${
+                    TRACKER_BACKENDS.join(", ")
+                }.`,
+            );
+        }
     }
     else if (!TRACKER_BACKENDS.includes(backend as TrackerBackend)) {
         add(
@@ -155,7 +202,9 @@ export function parseProfile(source: string, file: string): ParseResult {
 
     // An in-repo tracker with no file has no authority to point at, which
     // would leave task state with nowhere legal to live.
-    if (profile.tracker.backend === "in-repo" && !profile.tracker.file) {
+    if (
+        kind === "root" && backend === "in-repo" && !profile.tracker.file
+    ) {
         add(
             "tracker.backend",
             "tracker.file",
