@@ -1,0 +1,31 @@
+# The skills repo, subject to its own rules.
+# Single product, so this root profile carries the product fields directly.
+
+wiki:
+  root: docs/wiki
+  profiles: [technical]
+  path_citations: forbidden   # a repo about the rule does not get an exemption
+
+tracker:
+  backend: in-repo
+
+taskflow:
+  enabled: true
+
+house_rules: docs/house-rules.md
+
+generated_paths: []
+
+docs:
+  root: docs
+  lifecycle: ["specs/*.md", "plans/*.md"]
+  live: ["README.md"]
+  checklists: []
+  reference: []
+  assets: []
+  ignored: []
+  stale_after_days: 30
+  review_after_days: 90
+
+mode:
+  default: greenfield

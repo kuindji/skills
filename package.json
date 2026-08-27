@@ -1,0 +1,14 @@
+{
+    "name": "@kuindji/project-skills",
+    "version": "0.0.0",
+    "private": false,
+    "type": "module",
+    "description": "Shared project-management rules and validators for agent-driven repos",
+    "license": "MIT",
+    "files": [
+        "skills",
+        "templates",
+        "src",
+        "doctrine.md"
+    ]
+}
