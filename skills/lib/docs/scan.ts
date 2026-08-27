@@ -1,5 +1,5 @@
 import { parseFrontmatter } from "../markdown/frontmatter";
-import type { Diagnostic, Profile } from "../profile/types";
+import type { Diagnostic, DocClass, Profile } from "../profile/types";
 import { loadWikiPages } from "../wiki/scan";
 import {
     classifyDocPaths,
@@ -8,6 +8,8 @@ import {
 } from "./classify";
 import { isShallowRepository, lastCommitDates } from "./git";
 import { type DocFile, validateLifecycleDocs } from "./lifecycle";
+import { validateLiveDocs } from "./live";
+import { validateTrackerFile } from "./tracker";
 
 /**
  * List the repo's files as git sees them.
@@ -87,18 +89,62 @@ export async function validateDocs(
 ): Promise<DocsValidateResult> {
     const classified = await scanDocs(profile, repoRoot);
     const diagnostics: Diagnostic[] = [ ...classified.diagnostics ];
+    const base = repoRoot.endsWith("/") ? repoRoot : `${repoRoot}/`;
+    const now = options.now ?? new Date();
 
-    const paths = classified.files
-        .filter((file) => file.docClass === "lifecycle")
-        .map((file) => file.path);
+    const pathsIn = (wanted: DocClass) =>
+        classified.files
+            .filter((file) => file.docClass === wanted)
+            .map((file) => file.path);
+    const lifecyclePaths = pathsIn("lifecycle");
+    const livePaths = pathsIn("live");
+    const trackerPaths = pathsIn("tracker");
 
-    if (paths.length === 0) {
+    // The tracker's rules are about the shape of one markdown file and need
+    // no repository, so they run whether or not anything else here can.
+    for (const path of trackerPaths) {
+        diagnostics.push(
+            ...validateTrackerFile(
+                path,
+                await Bun.file(`${base}${path}`).text(),
+            ),
+        );
+    }
+
+    // Age is the one input here that cannot be answered from the files alone.
+    // Both classes that use it are asking git the same question, so it is
+    // asked once, and only when something is going to read the answer.
+    const agedPaths = lifecyclePaths.length + livePaths.length;
+    const commitDates = agedPaths > 0
+        ? await lastCommitDates(repoRoot)
+        : new Map<string, string>();
+    if (agedPaths > 0 && await isShallowRepository(repoRoot)) {
+        diagnostics.push({
+            file: profile.sourcePath,
+            keyPath: "docs.stale_after_days",
+            rule: "docs.shallowClone",
+            message:
+                "This is a shallow clone, so commit dates are truncated and "
+                + "document staleness and review age cannot be measured.",
+            remedy: "Fetch the full history where this runs. A CI checkout "
+                + "defaults to a depth of one, which makes every document look "
+                + "as though it was last touched at the boundary commit.",
+            severity: "warning",
+        });
+    }
+
+    diagnostics.push(...validateLiveDocs(livePaths, {
+        reviewAfterDays: profile.docs?.reviewAfterDays ?? 90,
+        commitDates,
+        now,
+    }));
+
+    if (lifecyclePaths.length === 0) {
         return { ...classified, diagnostics, lifecycle: [] };
     }
 
-    const base = repoRoot.endsWith("/") ? repoRoot : `${repoRoot}/`;
     const lifecycle: DocFile[] = await Promise.all(
-        paths.map(async (path) => ({
+        lifecyclePaths.map(async (path) => ({
             path,
             frontmatter: parseFrontmatter(
                 await Bun.file(`${base}${path}`).text(),
@@ -111,29 +157,11 @@ export async function validateDocs(
             (await loadWikiPages(profile, repoRoot)).map((page) => page.slug),
         );
 
-    // Staleness is the one rule here that cannot be answered from the files
-    // alone, so where its input is unreliable it says so rather than reporting
-    // a number it cannot stand behind.
-    if (await isShallowRepository(repoRoot)) {
-        diagnostics.push({
-            file: profile.sourcePath,
-            keyPath: "docs.stale_after_days",
-            rule: "docs.shallowClone",
-            message:
-                "This is a shallow clone, so commit dates are truncated and "
-                + "document staleness cannot be measured.",
-            remedy: "Fetch the full history where this runs. A CI checkout "
-                + "defaults to a depth of one, which makes every document look "
-                + "as though it was last touched at the boundary commit.",
-            severity: "warning",
-        });
-    }
-
     diagnostics.push(...validateLifecycleDocs(lifecycle, {
         staleAfterDays: profile.docs?.staleAfterDays ?? 30,
         wikiSlugs,
-        commitDates: await lastCommitDates(repoRoot),
-        now: options.now ?? new Date(),
+        commitDates,
+        now,
     }));
 
     return { ...classified, diagnostics, lifecycle };

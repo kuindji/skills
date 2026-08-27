@@ -1,6 +1,8 @@
 import { describe, expect, test } from "bun:test";
 import { parseProfile } from "../profile/parse";
-import { scanDocs, validateDocs } from "./scan";
+import { classifyDocPaths } from "./classify";
+import { listRepoFiles, scanDocs, validateDocs } from "./scan";
+import { validateTrackerFile } from "./tracker";
 
 /**
  * Classification has to hold against this repo before it is pointed at anyone
@@ -61,6 +63,31 @@ describe("this repo's docs classify cleanly", () => {
             "docs/specs/2026-08-27-project-management-skills-design.md",
         ]);
         expect(result.diagnostics).toEqual([]);
+    });
+
+    /**
+     * The corpus check for no-class-match. A real listing of this repo, plus
+     * one file that nothing declares: the case is a stray dated plan landing
+     * outside `specs/`, which would otherwise escape naming, the fold gate and
+     * staleness at once.
+     */
+    test("a stray file under docs/ is an error against this repo", async () => {
+        const file = `${root}project-profile.yaml`;
+        const { profile } = parseProfile(await Bun.file(file).text(), file);
+        const paths = await listRepoFiles(root);
+        const result = classifyDocPaths(profile!, [
+            ...paths,
+            "docs/2026-08-27-sync-plan.md",
+        ]);
+        const errors = result.diagnostics.filter((d) => d.severity === "error");
+        expect(errors).toHaveLength(1);
+        expect(errors[0]?.rule).toBe("docs.unclassified");
+        expect(errors[0]?.message).toContain("docs/2026-08-27-sync-plan.md");
+    });
+
+    test("this repo's own tracker passes the tracker rules", async () => {
+        const source = await Bun.file(`${root}docs/tasks.md`).text();
+        expect(validateTrackerFile("docs/tasks.md", source)).toEqual([]);
     });
 
     test("wiki pages are not given doc classes", async () => {

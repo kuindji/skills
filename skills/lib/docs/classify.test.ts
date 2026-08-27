@@ -133,6 +133,64 @@ docs:
         expect(result.diagnostics).toEqual([]);
         expect(result.files[0]?.docClass).toBe("tracker");
     });
+
+    test("the tracker checks reach outside the docs root", () => {
+        // Found by the gpt-5.5 review. A root-relative glob is how a tracker
+        // at the repo root gets its class, and that branch skipped both
+        // tracker checks entirely.
+        const rootTracker = profileFrom(`
+tracker:
+  backend: in-repo
+  file: docs/tasks.md
+docs:
+  root: docs
+  tracker: ["tasks.md", "/TODO.md"]
+`);
+        const result = classifyDocPaths(rootTracker, [
+            "TODO.md",
+            "docs/tasks.md",
+        ]);
+        const d = result.diagnostics.find(
+            (d) => d.rule === "docs.trackerAuthority",
+        );
+        expect(d).toBeDefined();
+        expect(d?.message).toContain("TODO.md");
+    });
+
+    test("a tracker at the repo root is not misfiled", () => {
+        const rootTracker = profileFrom(`
+tracker:
+  backend: in-repo
+  file: TODO.md
+docs:
+  root: docs
+  tracker: ["/TODO.md"]
+`);
+        const result = classifyDocPaths(rootTracker, [ "TODO.md" ]);
+        expect(result.diagnostics).toEqual([]);
+        expect(result.files[0]?.docClass).toBe("tracker");
+    });
+
+    test("a second file in the tracker class is a second authority", () => {
+        const twoTrackers = profileFrom(`
+tracker:
+  backend: in-repo
+  file: docs/tasks.md
+docs:
+  root: docs
+  tracker: ["tasks.md", "backlog.md"]
+`);
+        const result = classifyDocPaths(twoTrackers, [
+            "docs/tasks.md",
+            "docs/backlog.md",
+        ]);
+        const d = result.diagnostics.find(
+            (d) => d.rule === "docs.trackerAuthority",
+        );
+        expect(d).toBeDefined();
+        expect(d?.message).toContain("docs/backlog.md");
+        expect(d?.message).toContain("docs/tasks.md");
+    });
 });
 
 describe("no docs configured", () => {

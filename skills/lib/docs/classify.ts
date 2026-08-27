@@ -118,6 +118,11 @@ export function classifyDocPaths(
             const matched = classify("", path);
             if (matched.length === 1) {
                 files.push({ path, docClass: matched[0]! });
+                // The tracker checks belong to the path, not to where it
+                // sits. A repo whose tracker is a root TODO.md reaches it
+                // through a root-relative glob and would otherwise get none
+                // of them.
+                checkTrackerPlacement(profile, path, matched[0]!, diagnostics);
             }
             else if (matched.length > 1) {
                 diagnostics.push({
@@ -171,25 +176,7 @@ export function classifyDocPaths(
 
         const docClass = matched[0]!;
         files.push({ path, docClass });
-
-        // An in-repo tracker filed under another class would be validated as
-        // that class, so its ids, states and evidence lines go unchecked.
-        if (
-            trackerIsInRepo && path === profile.tracker.file
-            && docClass !== "tracker"
-        ) {
-            diagnostics.push({
-                file,
-                keyPath: "docs.tracker",
-                rule: "docs.trackerMisfiled",
-                message: `The tracker file \`${path}\` is classified as `
-                    + `\`${docClass}\`, not \`tracker\`.`,
-                remedy:
-                    "Move its glob to docs.tracker. Only that class checks task "
-                    + "ids, states, and the evidence line Done requires.",
-                severity: "error",
-            });
-        }
+        checkTrackerPlacement(profile, path, docClass, diagnostics);
     }
 
     // A glob that matches nothing looks like coverage and provides none. This
@@ -224,4 +211,54 @@ export function classifyDocPaths(
 
 function withTrailingSlash(path: string): string {
     return path.endsWith("/") ? path : `${path}/`;
+}
+
+/**
+ * Where an in-repo tracker may and may not sit.
+ *
+ * Both directions of the same rule. A tracker filed under another class is
+ * validated as that class, so its ids, states and evidence lines go
+ * unchecked. Another file filed as `tracker` is a second place task state can
+ * live, which is what the doctrine forbids: with ClickUp that cannot happen,
+ * and in-repo it has to be said.
+ */
+function checkTrackerPlacement(
+    profile: Profile,
+    path: string,
+    docClass: DocClass,
+    out: Diagnostic[],
+): void {
+    if (profile.tracker.backend !== "in-repo") {
+        return;
+    }
+    const file = profile.sourcePath;
+
+    if (docClass === "tracker" && path !== profile.tracker.file) {
+        out.push({
+            file,
+            keyPath: "docs.tracker",
+            rule: "docs.trackerAuthority",
+            message: `\`${path}\` is classified as \`tracker\`, but the `
+                + `tracker is \`${profile.tracker.file}\`.`,
+            remedy: "Give it the class that fits what it holds. The tracker "
+                + "file is the sole authority for task state, and a second "
+                + "file carrying it means the answer to what is done depends "
+                + "on which file a reader opens.",
+            severity: "error",
+        });
+    }
+
+    if (docClass !== "tracker" && path === profile.tracker.file) {
+        out.push({
+            file,
+            keyPath: "docs.tracker",
+            rule: "docs.trackerMisfiled",
+            message: `The tracker file \`${path}\` is classified as `
+                + `\`${docClass}\`, not \`tracker\`.`,
+            remedy:
+                "Move its glob to docs.tracker. Only that class checks task "
+                + "ids, states, and the evidence line Done requires.",
+            severity: "error",
+        });
+    }
 }

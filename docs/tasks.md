@@ -9,7 +9,6 @@ Ids are `<stage><n>`, stages following the build order in the design spec.
 
 ## Todo
 
-- [ ] `P2-04` `docs-validate`: live, tracker and no-class-match
 - [ ] `P2-05` `docs-freeze`
 - [ ] `P2-06` `guard-generated`
 - [ ] `P2-07` `project-validate` umbrella
@@ -28,6 +27,21 @@ Ids are `<stage><n>`, stages following the build order in the design spec.
 
 ## Done
 
+- [x] `P2-04` `docs-validate`: live, tracker and no-class-match
+      evidence: bun test skills/lib/docs — 121 pass. Review age is calibrated
+      against three real repositories: BearingKind reports 26 live-shaped
+      documents and none past 90 days, Riskore 17 and none, TheFloorr 85 and 66,
+      with a median age of 214 days and the oldest at 2191. A mature repo
+      producing 66 of them is why the rule warns rather than errors. The tracker
+      rules pointed at real checkbox-carrying documents that are not trackers
+      report 83 and 13 diagnostics, which is the measurement behind keeping them
+      inside their class rather than over a docs root. Probing the parser
+      against the markdown a tracker file really holds found four bypasses
+      before review: fenced examples read as state, `*` and `+` rows silently
+      unchecked, nested steps demanded ids of their own, and an all-indented
+      file reporting nothing at all. The gpt-5.5 review found five more, all
+      reproduced before fixing, and one it called a fault was kept as it was:
+      evidence shown in a code block is still evidence a reader can act on.
 - [x] `P2-03` `docs-validate`: lifecycle class
       evidence: bun test skills/lib/docs — 73 pass, incl. real git repositories
       built for the merge-commit, non-ASCII-path and shallow-clone cases. Against
