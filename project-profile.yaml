@@ -20,7 +20,7 @@ generated_paths: []
 docs:
   root: docs
   lifecycle: ["specs/*.md", "plans/*.md"]
-  live: ["README.md"]
+  live: ["house-rules.md"] # perpetually current, review-aged
   tracker: ["tasks.md"]
   checklists: []
   reference: []

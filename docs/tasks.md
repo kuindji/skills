@@ -9,7 +9,8 @@ Ids are `<stage><n>`, stages following the build order in the design spec.
 
 ## Todo
 
-- [ ] `P1-02` Doc-class resolution, including no-match-is-an-error
+- [ ] `P1-06` Dead-glob detection: a declared class glob matching nothing is a warning
+- [ ] `P1-07` Decide whether repo-root files (README) fall under any class
 - [ ] `P1-03` Owner resolution: `.agent-owner`, then `git rev-parse --git-common-dir` basename
 - [ ] `P1-04` Path-to-product index, non-overlap checking
 - [ ] `P1-05` Profile fixtures for BearingKind and TheFloorr shapes
@@ -35,6 +36,8 @@ Ids are `<stage><n>`, stages following the build order in the design spec.
 
 ## Done
 
+- [x] `P1-02` Doc-class resolution, including no-match-is-an-error
+      evidence: bun test skills/lib/docs — 14 pass; first run against this repo flagged docs/house-rules.md as unclassified
 - [x] `P1-01` Profile schema and parser
       evidence: bun test skills/lib/profile — 17 pass, includes parsing this repo's own project-profile.yaml
 - [x] `P0-01` Design spec, two gpt-5.5 review rounds
