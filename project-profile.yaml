@@ -8,6 +8,7 @@ wiki:
 
 tracker:
   backend: in-repo
+  file: docs/tasks.md
 
 taskflow:
   enabled: true
@@ -20,6 +21,7 @@ docs:
   root: docs
   lifecycle: ["specs/*.md", "plans/*.md"]
   live: ["README.md"]
+  tracker: ["tasks.md"]
   checklists: []
   reference: []
   assets: []

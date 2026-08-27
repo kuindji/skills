@@ -257,6 +257,7 @@ Per-product profile, at the product's docs root:
       root: .
       lifecycle: ["specs/*.md", "plans/*.md"]
       live: ["README.md", "milestones.md"]
+      tracker: []                # set only when tracker.backend is in-repo
       checklists: ["*-checklist.md", "**/launch-checklist.md"]
       reference: ["research/**", "policies/**", "legal-and-compliance/**"]
       assets: ["branding/**", "repros/**"]
@@ -358,6 +359,7 @@ violation, which is how a validator gets switched off.
 |---|---|---|---|
 | `lifecycle` (specs, plans) | `YYYY-MM-DD-topic.md` | yes | yes |
 | `live` (README, roadmap) | free | no, but review-aged | no |
+| `tracker` (in-repo backend only) | free | no, perpetually live | no |
 | `checklists` | free | no, append-only evidence | no |
 | `reference` (research, policies, legal) | free | no, dated by content | no |
 | `assets` | free | not validated | no |
@@ -426,6 +428,37 @@ Protocol:
   profile.
 - Ticket title and description readable by someone new to the project. This
   generalizes TheFloorr's existing ClickUp rule.
+
+### When the tracker is a file
+
+`tracker.backend: in-repo` names a markdown file that **is** the tracker. The
+doctrine rule "issue state lives in the tracker and nowhere else" was written
+assuming an external system, where it holds trivially. In-repo it needs saying
+explicitly: the named file is the sole authority for task state, and no other
+file in the repo may carry it. A README that narrates what is in progress is a
+second authority and is a violation, exactly as it would be with ClickUp.
+
+The file's shape is fixed enough to validate:
+
+    ## Todo
+    - [ ] `P1-03` Owner resolution, .agent-owner and common-dir fallback
+
+    ## In progress
+    - [ ] `P2-01` wiki-validate position bans
+
+    ## Done
+    - [x] `P1-01` Profile schema
+          evidence: bun test skills/lib/profile
+
+`docs-validate` checks the `tracker` class: section headings come from the fixed
+set (Todo, In progress, Blocked, Done), every task carries a unique id, no id
+appears in two sections, and a task under Done carries an `evidence:` line. That
+last check is how "done means evidence, not that the code exists" survives the
+move from an external tracker to a file.
+
+The start and finish protocol is otherwise unchanged. Restating scope on start
+and recording what changed on finish happen in the task entry rather than in a
+ticket comment.
 
 **Taskflow is a separate axis from the tracker.** ClickUp and Linear hold issue
 state; Taskflow holds the local session, worktree and log. Both can be present,
@@ -580,9 +613,12 @@ shape every validator needs to exercise:
 | declared-but-empty wiki | `docs/wiki/` |
 | no-class-match is an error | any stray file under `docs/` |
 | `path_citations: forbidden` | this repo's own setting |
+| in-repo tracker class | `docs/tasks.md` |
+| multi-product, owners, roadmap | checked-in BearingKind profile fixture |
+| dual wiki profiles, external tracker | checked-in TheFloorr profile fixture |
 
 `project-validate` exiting 0 against this repo is the acceptance gate for the
-whole build. Writing `docs/wiki/` for real is part of it: the wiki that describes
+whole build, and no other repo is touched until it is met. Writing `docs/wiki/` for real is part of it: the wiki that describes
 this system doubles as the corpus `wiki-validate` is tested against, and a
 validator whose author could not write a passing page against it is not finished.
 
@@ -608,29 +644,33 @@ Not phases, dependency order within one sweep.
 
 ## Adoption
 
-Two fixtures, for two different things. **TheFloorr is the wiki-validator
-fixture**: 150 pages, the richest graph, and the source of the validator being
-generalized (`cli/wiki/validate-wiki.ts`). **BearingKind is the profile and
-ownership fixture**: the only repo with clone ownership, a complement-owner,
-per-product roadmaps and shared packages. TheFloorr should pass the carried-over
-graph rules immediately; the position and snapshot rules will produce a real
-worklist, which is the first genuine test of whether they are right.
+**This repo is the only subject until everything works here.** No other repo is
+touched, not even read-only, until `project-validate` exits 0 against this one,
+all four skills have been exercised on it, and its own `docs/wiki/` is written
+and passing.
 
-**Schema first against the hardest shape, migration last against the easiest.**
-The first draft had these the same way round, which would have hardened the
-schema on single-product repos and then broken on the one repo that actually
-exercises multi-product ownership.
+That creates one risk worth stating plainly. This is the simplest shape the
+schema supports: one product, no `owners` block, no roadmap, an in-repo tracker,
+a wiki that starts empty. A schema hardened only against it would fit only it,
+which is the failure Codex's round-1 review predicted when the original plan put
+the hardest repo last.
 
-1. **Prototype against BearingKind, read-only.** Write its owners block, four
-   product profiles and doc classes, run the validators, change nothing. It is
-   the only repo with clone ownership, per-product roadmaps, shared packages and
-   a complement-owner. If the schema survives it, the schema is right.
-2. **Migrate Riskore.** Smallest, single product, business-only wiki, no
+The mitigation keeps the constraint intact: **the hard shapes arrive as
+fixtures, not as adoption.** Profiles for BearingKind (four products, an owners
+block with a complement default, per-product roadmaps, shared packages) and
+TheFloorr (dual wiki profiles, external tracker, no roadmap, mature mode) are
+written into this repo's test corpus and validated there. Nothing is installed
+into those repos and nothing in them is modified. The schema gets its coverage;
+the constraint holds.
+
+Once the gate is met, the test sessions run in this order:
+
+1. **Riskore.** Smallest real subject. Single product, business-only wiki, no
    roadmap. First repo actually brought into compliance.
-3. **Migrate TheFloorr.** Most mature wiki, dual profiles, ClickUp, mature mode.
-   Proves the carried-over rules and works the 19-page line-number list.
-4. **Migrate BearingKind.** Schema already validated in step 1; this is the docs
-   and AGENTS.md work.
+2. **TheFloorr.** The wiki-validator's real trial: 150 pages, dual profiles,
+   ClickUp, mature mode, and the 19-page line-number worklist.
+3. **BearingKind.** Clone ownership, four products, roadmaps, checklists. Its
+   profile fixture will already have been passing for some time by then.
 
 Vigilocity follows once the schema has survived all three.
 
