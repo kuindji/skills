@@ -9,7 +9,6 @@ Ids are `<stage><n>`, stages following the build order in the design spec.
 
 ## Todo
 
-- [ ] `P2-05` `docs-freeze`
 - [ ] `P2-06` `guard-generated`
 - [ ] `P2-07` `project-validate` umbrella
 - [ ] `P3-01` `doctrine.md`
@@ -27,6 +26,30 @@ Ids are `<stage><n>`, stages following the build order in the design spec.
 
 ## Done
 
+- [x] `P2-05` `docs-freeze`: computing and writing `frozen_body_sha256`
+      evidence: bun test skills/lib/docs — 153 pass. The writer half of the
+      freeze, as a library; the `docs-freeze` bin lands with the others at
+      `P2-07`. It splices one key into the frontmatter rather than
+      re-serialising the YAML, which would destroy comments and key order, so
+      almost every risk is in the splice. Measured across five real
+      repositories, all read-only and dry-run: 220 date-named documents under
+      `specs/` and `plans/`, and not one carries frontmatter at all. That is
+      the whole argument for the sweep swallowing `noFrontmatter` and
+      `notShipped` — a first run against Riskore would otherwise print 49
+      errors about documents nobody asked about, and naming a path is what
+      turns the refusal back on. Probing thirteen awkward frontmatter shapes
+      found that a flow collection split over several lines is valid YAML the
+      parser here rejects, so the refusal now says how to rewrite it; it occurs
+      in 0 of the 183 frontmatter blocks in those repos. The gpt-5.5 review
+      found four more, all reproduced as failing tests before fixing, and the
+      worst was mine by design: `reopened_reason` was only spent by a refreeze,
+      so a document shipping with both a hash and a reason was exempt from
+      every later edit forever. The other three corrupt a saved file — a blank
+      line inside a block scalar ended the removal early and folded the rest of
+      the prose into `status`, a deleted anchored key left its aliases
+      unresolved, and a quoted `"frozen_body_sha256":` survived as a duplicate.
+      An anchored key is now refused rather than rewritten: a refusal is
+      recoverable and a corrupt document is not.
 - [x] `P2-04` `docs-validate`: live, tracker and no-class-match
       evidence: bun test skills/lib/docs — 121 pass. Review age is calibrated
       against three real repositories: BearingKind reports 26 live-shaped

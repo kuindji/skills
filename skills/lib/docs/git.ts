@@ -111,3 +111,40 @@ export async function isShallowRepository(repoRoot: string): Promise<boolean> {
     ]);
     return exitCode === 0 && stdout.trim() === "true";
 }
+
+/**
+ * List the repo's files as git sees them.
+ *
+ * Tracked files plus untracked ones that are not ignored. A raw directory walk
+ * would classify node_modules and build output; asking git means the validator
+ * sees exactly what a reviewer would.
+ *
+ * NUL-separated, because git's default output quotes and octal-escapes any
+ * path outside ASCII: a file named `café.md` arrives as the literal
+ * `"docs/caf\303\251.md"`, which then fails to open and is reported as
+ * unclassified. `-z` turns the quoting off entirely.
+ */
+export async function listRepoFiles(repoRoot: string): Promise<string[]> {
+    const proc = Bun.spawn(
+        [
+            "git",
+            "ls-files",
+            "-z",
+            "--cached",
+            "--others",
+            "--exclude-standard",
+        ],
+        { cwd: repoRoot, stdout: "pipe", stderr: "pipe" },
+    );
+    const [ stdout, exitCode ] = await Promise.all([
+        new Response(proc.stdout).text(),
+        proc.exited,
+    ]);
+    if (exitCode !== 0) {
+        const stderr = await new Response(proc.stderr).text();
+        throw new Error(
+            `git ls-files failed in ${repoRoot}: ${stderr.trim()}`,
+        );
+    }
+    return stdout.split("\0").filter((path) => path.length > 0);
+}
