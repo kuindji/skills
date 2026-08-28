@@ -86,6 +86,39 @@ describe("this repo's skills", () => {
         expect(problems.map((d) => `${d.file}: ${d.message}`)).toEqual([]);
     });
 
+    /**
+     * The `AGENTS.md` table is how an agent finds a skill at all, and a skill
+     * missing from it is a skill nothing reads. Nothing else checks this: the
+     * template tests check that every path the table names resolves, which is
+     * the opposite direction and stays green while the table quietly falls a
+     * row behind the skills directory.
+     *
+     * Both copies are checked. The template is what a consuming repository
+     * pastes, and this repository's own `AGENTS.md` is that template with the
+     * paths edited, which is exactly the edit that drops a row.
+     */
+    test("every skill has a row in both AGENTS tables", async () => {
+        const tables = await Promise.all([
+            Bun.file(`${repoRoot}/AGENTS.md`).text(),
+            Bun.file(`${repoRoot}/skills/templates/AGENTS-block.md`).text(),
+        ]);
+        const missing: string[] = [];
+        for (const { directory } of await loadSkills()) {
+            for (const [ index, table ] of tables.entries()) {
+                if (!table.includes(`${directory}/SKILL.md`)) {
+                    missing.push(
+                        `${
+                            index === 0
+                                ? "AGENTS.md"
+                                : "the template"
+                        }: ${directory}`,
+                    );
+                }
+            }
+        }
+        expect(missing).toEqual([]);
+    });
+
     test("every link out of a skill resolves, heading and all", async () => {
         const problems = [];
         for (const skill of await loadSkills()) {

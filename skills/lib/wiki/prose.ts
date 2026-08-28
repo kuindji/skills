@@ -30,7 +30,7 @@ import { bodyLines, type WikiPage } from "./page";
  * a rule that fires on a legitimate sentence is how a validator gets switched
  * off, and a missed citation costs only that citation.
  */
-const CODE_EXTENSIONS = [
+export const CODE_EXTENSIONS = [
     "ts",
     "tsx",
     "js",

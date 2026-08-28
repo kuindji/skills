@@ -9,16 +9,6 @@ Ids are `<stage><n>`, stages following the build order in the design spec.
 
 ## Todo
 
-- [ ] `P4-01` `housekeeping` SKILL.md and the sweep
-      note: the spec's drift worklist has pages declaring `watch_paths` in
-      frontmatter, and the wiki frontmatter contract is closed at five keys, so
-      that escape hatch does not exist as written. Decide it there rather than
-      widening the contract by accident.
-      note: `skills/templates/AGENTS-block.md` carries a table of which skill
-      to read when, and it has three rows because there are three skills. The
-      fourth row lands with this task, and `skills/lib/templates/` has the test
-      that will fail if the path is wrong but not one that notices the row is
-      missing.
 - [ ] `P5-01` Write this repo's `docs/wiki/`
 - [ ] `P5-02` Acceptance: `project-validate` exits 0 on this repo
 
@@ -27,6 +17,69 @@ Ids are `<stage><n>`, stages following the build order in the design spec.
 ## Blocked
 
 ## Done
+
+- [x] `P4-01` `housekeeping` SKILL.md and the sweep
+      evidence: bun test — 598 pass, 51 of them new and every one written to
+      fail first, each verified red by breaking the thing it checks; `bun run
+      type-check` clean; `bun run skills/bin/project-validate.ts` exits 0 here,
+      with the one standing warning that `docs/wiki` is empty, which is
+      `P5-01`. The fourth skill, and the seventh bin under it.
+      The sweep's step 2 ships as code, `wiki-drift`, because it is the step
+      that turns an unbounded instruction into a list with an end, and a step
+      that is different every time it runs does not do that. It is the first
+      bin that reports rather than judges: it enforces no rule, a queued page
+      is not a fault, and it exits 0 whenever it produced a list. That keeps it
+      out of the umbrella, next to `docs-freeze` and `guard-generated`, and the
+      reason is now in doctrine rather than in this entry.
+      The `watch_paths` note is decided: there is no such key, and the
+      frontmatter contract stays at five. It is a list of positions, and this
+      system bans those in prose precisely because a stale one points nowhere,
+      so blessing them in frontmatter would move the decay to the one place no
+      reader passes. A page that needs to pin a file cites it in the body,
+      where a reader sees it, and the extractor reads a cited path as a name of
+      its own kind, which is the escape hatch the spec was reaching for arriving
+      through the front door. A page with nothing greppable is surfaced on age.
+      The measure of the extraction is what it throws out. Nine rejection rules
+      and a ceiling of 200 files per name, because a token in three hundred
+      files is a word, and one word at the top of the list is what makes an
+      ordered worklist worthless. Every drop is reported, since a real name
+      dropped is a page that looks traced and is not.
+      Two faults found in the writing, both in the tests rather than the code.
+      Nine of the first 35 tests passed for the wrong reason: the fence-masking
+      test used a fence whose content was rejected anyway, the whitespace test
+      was already covered by the identifier shape, the path-boundary test
+      compared paths that no boundary separated, and the age-ordering test had
+      one entry to order. Each was found by breaking the thing it named and
+      watching it stay green, which is the only way that class of test is
+      found at all.
+      The AGENTS.md note is closed by a test rather than by the row it asked
+      for. The template tests check that every path the table names resolves,
+      which is the opposite direction and stays green while the table falls a
+      row behind; the new one walks the skills directory and fails on a skill
+      missing from either copy of the table.
+      Four faults in the code, three of them found by reading it back and one
+      by gpt-5.5, and every one is a way the run lies confidently rather than a
+      way it breaks. A shallow clone gives every file the boundary commit's
+      date, so the whole wiki reports churn, and CI checks out at depth one by
+      default; a docs root at the repository root normalises to the empty
+      string, which the exclusion read as no root at all and so searched every
+      spec as though it were code; an undated page was told its names were
+      missing from a repository they are still in, because three ways of being
+      untraceable shared one sentence; and a page naming `analytics.rate_table`
+      was permanently untraceable, because extraction accepts a dotted name and
+      the index split on the dot. The first two now say so in the run, the
+      third has its own sentence, and the index holds dotted names and their
+      segments both.
+      One gpt-5.5 round, three findings, each reproduced before it was acted
+      on. It found the dotted-name miss and the empty docs root, which I had
+      already found and fixed, and a third I had not: `--json` dropped the
+      loader's own findings while the prose form printed them, so a machine
+      reading the worklist could not tell a sweep that measured what it claims
+      from one pointed at a subdirectory, where no date matches any file.
+      folded into: nothing yet. `docs/wiki/` is empty until `P5-01`, and this
+      task's reasoning that outlives it is in `skills/doctrine.md`.
+      follow-up: none filed. The coverage-gap extractors stay manual and
+      deferred, which is recorded in doctrine, not carried as a task.
 
 - [x] `P3-05` Templates
       evidence: bun test — 546 pass, 15 of them new and every one written to

@@ -40,8 +40,12 @@ const CODE_SPAN_RE = /`+([^`]+)`+/g;
  * command. The failure being caught is a skill naming a bin that does not
  * exist, which an agent discovers as a command-not-found in the middle of the
  * procedure the skill exists to give it.
+ *
+ * Closed means every bin this package gains has to be added here. A suffix
+ * missing from the set is a bin no skill is checked against, and that failure
+ * arrives silently.
  */
-const BIN_LIKE_RE = /\b[a-z][a-z0-9-]*-(?:validate|freeze|generated)\b/g;
+const BIN_LIKE_RE = /\b[a-z][a-z0-9-]*-(?:validate|freeze|generated|drift)\b/g;
 
 /** `[text](target)`, with the target captured. */
 const LINK_RE = /\[[^\]\n]*\]\(([^)\s]+)(?:\s+"[^"]*")?\)/g;

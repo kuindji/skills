@@ -67,6 +67,7 @@ describe("the bins are wired up", () => {
         "project-validate",
         "profile-validate",
         "wiki-validate",
+        "wiki-drift",
         "docs-validate",
         "docs-freeze",
         "guard-generated",

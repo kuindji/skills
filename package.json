@@ -16,6 +16,7 @@
         "project-validate": "./skills/bin/project-validate.ts",
         "profile-validate": "./skills/bin/profile-validate.ts",
         "wiki-validate": "./skills/bin/wiki-validate.ts",
+        "wiki-drift": "./skills/bin/wiki-drift.ts",
         "docs-validate": "./skills/bin/docs-validate.ts",
         "docs-freeze": "./skills/bin/docs-freeze.ts",
         "guard-generated": "./skills/bin/guard-generated.ts"

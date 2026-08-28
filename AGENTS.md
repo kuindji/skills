@@ -27,6 +27,7 @@ surfaces in the first line instead of in the diff.
 | Write or edit a wiki page                   | `skills/wiki-authoring/SKILL.md` |
 | Write a spec, plan or handover, or ship one | `skills/project-docs/SKILL.md`   |
 | Start a task, update one, or finish one     | `skills/task-tracking/SKILL.md`  |
+| Sweep the wiki and docs, on a cadence       | `skills/housekeeping/SKILL.md`   |
 | Ask why a rule exists at all                | `skills/doctrine.md`             |
 
 Before claiming any of it is done:

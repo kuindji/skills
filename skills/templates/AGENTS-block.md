@@ -36,6 +36,7 @@ surfaces in the first line instead of in the diff.
 | Write or edit a wiki page                   | `node_modules/@kuindji/project-skills/skills/wiki-authoring/SKILL.md` |
 | Write a spec, plan or handover, or ship one | `node_modules/@kuindji/project-skills/skills/project-docs/SKILL.md`   |
 | Start a task, update one, or finish one     | `node_modules/@kuindji/project-skills/skills/task-tracking/SKILL.md`  |
+| Sweep the wiki and docs, on a cadence       | `node_modules/@kuindji/project-skills/skills/housekeeping/SKILL.md`   |
 | Ask why a rule exists at all                | `node_modules/@kuindji/project-skills/skills/doctrine.md`             |
 
 Before claiming any of it is done:
@@ -47,5 +48,6 @@ bunx project-validate
 Exit 0, or it is not done. `bunx wiki-validate`, `bunx docs-validate` and
 `bunx profile-validate` run the same checks one at a time. The write guard,
 `bunx guard-generated`, judges a change rather than the repository, so it runs
-where the change is.
+where the change is. `bunx wiki-drift` judges nothing: it orders the wiki pages
+by what moved under them, for the housekeeping sweep.
 ````

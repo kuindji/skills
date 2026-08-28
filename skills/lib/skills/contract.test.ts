@@ -5,6 +5,7 @@ const BINS = [
     "project-validate",
     "profile-validate",
     "wiki-validate",
+    "wiki-drift",
     "docs-validate",
     "docs-freeze",
     "guard-generated",
@@ -221,6 +222,23 @@ describe("commands the skill tells an agent to run", () => {
             bins: BINS,
         });
         expect(rules(found)).toEqual([ "skill.unknownBin" ]);
+    });
+
+    /**
+     * The suffix set is closed, so every bin this package gains has to be
+     * added to it. A bin the pattern does not recognise is a bin no skill is
+     * checked against, which is the failure the rule exists to catch, arriving
+     * silently.
+     */
+    test("a misspelled reporting bin is caught too", () => {
+        const source = GOOD.replace("`wiki-validate`", "`wiki-page-drift`");
+        const found = checkSkill(skill(source), {
+            directory: "wiki-authoring",
+            entries: [ "SKILL.md" ],
+            bins: BINS,
+        });
+        expect(rules(found)).toEqual([ "skill.unknownBin" ]);
+        expect(found[0]?.message).toContain("wiki-page-drift");
     });
 
     /**

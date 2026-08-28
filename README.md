@@ -9,20 +9,19 @@ It answers one question in five places: **what is the decay rate of this
 sentence, and what invalidates it.** Wiki, docs, tracker, checklists and code
 each have a different answer, and every rule here derives from one of them.
 
-Status: the validators run, three of the four skills are written,
-`wiki-authoring`, `project-docs` and `task-tracking`, and the templates a
-project copies out of here ship. `housekeeping` and this repo's own wiki are
-still to come. The design is in
+Status: the validators run, all four skills are written, and the templates a
+project copies out of here ship. This repo's own wiki is still to come, and it
+is the acceptance gate. The design is in
 [`docs/specs/2026-08-27-project-management-skills-design.md`](docs/specs/2026-08-27-project-management-skills-design.md)
 and the work is tracked in [`docs/tasks.md`](docs/tasks.md).
 
 ## Validators
 
-Six bins, runnable by any agent and by CI. Each takes `--repo <dir>`, defaulting
-to the enclosing repository, and `--json`. They exit 0 when nothing is wrong,
-1 when the repository fails a rule, and 2 when the tool could not run at all —
-a distinction a CI job needs, since a validator pointed at the wrong directory
-is not a repository full of faults. Warnings never fail a run.
+Seven bins, runnable by any agent and by CI. Each takes `--repo <dir>`,
+defaulting to the enclosing repository, and `--json`. They exit 0 when nothing
+is wrong, 1 when the repository fails a rule, and 2 when the tool could not run
+at all — a distinction a CI job needs, since a validator pointed at the wrong
+directory is not a repository full of faults. Warnings never fail a run.
 
 | Bin                | Checks                                                        |
 | ------------------ | ------------------------------------------------------------- |
@@ -32,6 +31,14 @@ is not a repository full of faults. Warnings never fail a run.
 | `docs-validate`    | Doc classes, and the rules of each class.                     |
 | `docs-freeze`      | Writes `frozen_body_sha256` into shipped lifecycle docs.      |
 | `guard-generated`  | Refuses edits to generated output or outside a clone's scope. |
+| `wiki-drift`       | Nothing. It orders the wiki pages by what moved under them.   |
+
+`wiki-drift` is the odd row, and it is the tool the housekeeping sweep runs on.
+It enforces no rule: it takes the names off each wiki page, finds the files
+holding those names today, and orders the pages by how much of that moved since
+each page said it was current. A queued page is not a fault, so it exits 0
+whenever it produced a list, and it stays outside the umbrella for the same
+reason `docs-freeze` and `guard-generated` do.
 
 ## Layout
 

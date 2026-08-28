@@ -86,6 +86,19 @@ and grepping for where they live now. A stale name still points somewhere. A
 stale line number points nowhere and cannot be traced, so a page written in
 positions is invisible to the only mechanism that would have caught it.
 
+That is also why there is no frontmatter key naming the paths a page watches.
+The design document offered one, and it does not exist: the frontmatter
+contract is closed at five keys, so it would be an error by a rule that
+predates it, and a list of paths is a list of positions. Putting them in
+frontmatter, where only a tool would ever read them, moves the decay to the one
+place no reader passes. A page that needs to pin a file cites it in the body,
+where a reader sees it, and the sweep reads a cited path as a name of its own
+kind. A page with nothing greppable at all, which is the ordinary shape of one
+about a convention or a legal position, is surfaced on age instead. Ordering by
+age is a worse answer than tracing, and it is the honest one: the sweep says
+which of the two it did for every page, because a heuristic a reader mistakes
+for a proof is worse than no heuristic.
+
 The enforced ban is narrow, because a wider one deletes contracts while claiming
 to protect them. Call syntax like `useToast()`, fenced code blocks showing a
 contract shape, and bare dates are all allowed. They were measured against real
@@ -226,7 +239,7 @@ obligation is constant either way.
 
 ## Where the rules are enforced
 
-Six bins, runnable by any agent and by CI. Each takes `--repo <dir>` and
+Seven bins, runnable by any agent and by CI. Each takes `--repo <dir>` and
 `--json`, exits 0 when nothing is wrong, 1 when the repository fails a rule, and
 2 when the tool could not run at all. Warnings never fail a run.
 
@@ -238,14 +251,28 @@ Six bins, runnable by any agent and by CI. Each takes `--repo <dir>` and
 | `docs-validate`    | doc classes, and the rules of each class                      |
 | `docs-freeze`      | writes `frozen_body_sha256` into a lifecycle doc as it ships  |
 | `guard-generated`  | refuses edits to generated output, or outside a clone's scope |
+| `wiki-drift`       | nothing: it orders the wiki pages by what moved under them    |
 
 The umbrella runs the three checks that judge a repository as it stands. The
-other two are deliberately outside it, and the design document, which describes
-it as running all of them, predates that split. `guard-generated` judges a
-change rather than a repository, so it belongs where the change is being made
-and not on whatever machine runs CI. `docs-freeze` writes, and a validator that
-edits files while reporting on them is a validator nobody can run to find out
-where they stand.
+other three are deliberately outside it, and the design document, which
+describes it as running all of them, predates that split. `guard-generated`
+judges a change rather than a repository, so it belongs where the change is
+being made and not on whatever machine runs CI. `docs-freeze` writes, and a
+validator that edits files while reporting on them is a validator nobody can run
+to find out where they stand.
+
+`wiki-drift` is the odd one, and its row says "nothing" for a reason. It
+enforces no rule: it answers what to read next, which is a different question
+with a different exit code. A queued page is not a fault, so it exits 0
+whenever it produced a list and 2 only when it could not run, and putting it in
+the umbrella would mean failing a build over a grep. It is the tool the
+housekeeping sweep is built on and it belongs to nobody else's gate.
+
+The other half of that sweep, diffing the names the repository has against the
+names the wiki mentions, stays manual. Enumerating them well means knowing
+where this repository keeps its service names, its table names and its
+workspaces, and a profile block declaring per-repo extractors is deferred until
+the manual version has run often enough to say what is worth declaring.
 
 ## Which skill fires when
 
