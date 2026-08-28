@@ -64,7 +64,7 @@ export interface ParseOptions {
      * `in-repo` — the default — and every rule that asks where task state
      * lives got the wrong answer for that product, silently.
      */
-    inherit?: { trackerBackend?: TrackerBackend; };
+    inherit?: { trackerBackend?: TrackerBackend; trackerFile?: string; };
 }
 
 export interface ParseResult {
@@ -227,7 +227,28 @@ export function parseProfile(
         profile.tracker.backend = backend as TrackerBackend;
     }
     profile.tracker.project = optionalString(tracker.project);
-    profile.tracker.file = optionalString(tracker.file);
+    // The file is repo-wide, so a product reads the root's rather than its
+    // own. Every skill starts by resolving the profile that governs a path,
+    // and under a product profile that resolution has to answer where the
+    // tracker is.
+    profile.tracker.file = optionalString(tracker.file)
+        ?? options.inherit?.trackerFile;
+
+    // The tracker file is repo-wide for the same reason the backend is, and
+    // everything that reads it reads the root profile's. Accepted here it
+    // would be a key somebody set, believed, and nothing ever acted on.
+    if (kind === "product" && optionalString(tracker.file) !== undefined) {
+        add(
+            "tracker.file",
+            "tracker.rootOnlyFile",
+            "`tracker.file` names the repository's tracker, but this is a "
+                + "product profile.",
+            "Move it to the root project-profile.yaml. One file holds task "
+                + "state for the whole repository, and a product's docs root "
+                + "can hold it: classification reads the root profile's path "
+                + "either way. A product profile carries `tracker.project`.",
+        );
+    }
 
     // An in-repo tracker with no file has no authority to point at, which
     // would leave task state with nowhere legal to live.

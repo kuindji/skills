@@ -133,7 +133,12 @@ export function classifyDocPaths(
                 // sits. A repo whose tracker is a root TODO.md reaches it
                 // through a root-relative glob and would otherwise get none
                 // of them.
-                checkTrackerPlacement(profile, path, matched[0]!, diagnostics);
+                checkTrackerPlacement(
+                    profile,
+                    path,
+                    matched[0]!,
+                    diagnostics,
+                );
             }
             else if (matched.length > 1) {
                 diagnostics.push({
@@ -238,6 +243,51 @@ function withTrailingSlash(path: string): string {
 }
 
 /**
+ * Something classifies the tracker file as `tracker`.
+ *
+ * Every rule that makes an in-repo tracker trustworthy runs over files in that
+ * class, so a tracker no glob claims is a file none of them ever see. The
+ * repository can declare the backend, name the file, write it, and have the
+ * one rule the whole class exists for, that Done carries evidence, silently
+ * not run. Nothing else reports it: outside a docs root the file is not swept
+ * for a class at all, and inside one it draws `docs.unclassified`, which reads
+ * as a filing question rather than as the tracker being unchecked.
+ *
+ * Takes what every profile classified rather than one profile's result,
+ * because the tracker is repo-wide and the profile that claims it may be a
+ * product's.
+ */
+export function checkTrackerCovered(
+    root: Profile,
+    classified: ClassifiedDoc[],
+): Diagnostic[] {
+    const path = root.tracker.file;
+    if (root.tracker.backend !== "in-repo" || path === undefined) {
+        return [];
+    }
+    const covered = classified.some(
+        (doc) => doc.path === path && doc.docClass === "tracker",
+    );
+    if (covered) {
+        return [];
+    }
+    return [ {
+        file: root.sourcePath,
+        keyPath: "tracker.file",
+        rule: "docs.trackerUnchecked",
+        message: `Nothing classifies the tracker \`${path}\` as \`tracker\`, `
+            + "so none of the tracker rules ran over it.",
+        remedy:
+            "Add a glob matching it under `docs.tracker`, in the profile whose "
+            + "docs root holds it, and check the file is there and not "
+            + "gitignored. Globs resolve relative to that docs root; a leading "
+            + "`/` matches from the repo root. Until one does, a task can sit "
+            + "in Done with no evidence and an id can name two tasks.",
+        severity: "error",
+    } ];
+}
+
+/**
  * Where an in-repo tracker may and may not sit.
  *
  * Both directions of the same rule. A tracker filed under another class is
@@ -252,18 +302,23 @@ function checkTrackerPlacement(
     docClass: DocClass,
     out: Diagnostic[],
 ): void {
-    if (profile.tracker.backend !== "in-repo") {
+    const trackerFile = profile.tracker.file;
+    // Without a tracker file there is nothing to compare a path against. A
+    // product profile inherits the repository's, so this is the profile that
+    // was parsed on its own; reading the absence as a mismatch reported every
+    // such file as misfiled against a tracker named `undefined`.
+    if (profile.tracker.backend !== "in-repo" || trackerFile === undefined) {
         return;
     }
     const file = profile.sourcePath;
 
-    if (docClass === "tracker" && path !== profile.tracker.file) {
+    if (docClass === "tracker" && path !== trackerFile) {
         out.push({
             file,
             keyPath: "docs.tracker",
             rule: "docs.trackerAuthority",
             message: `\`${path}\` is classified as \`tracker\`, but the `
-                + `tracker is \`${profile.tracker.file}\`.`,
+                + `tracker is \`${trackerFile}\`.`,
             remedy: "Give it the class that fits what it holds. The tracker "
                 + "file is the sole authority for task state, and a second "
                 + "file carrying it means the answer to what is done depends "
@@ -272,7 +327,7 @@ function checkTrackerPlacement(
         });
     }
 
-    if (docClass !== "tracker" && path === profile.tracker.file) {
+    if (docClass !== "tracker" && path === trackerFile) {
         out.push({
             file,
             keyPath: "docs.tracker",

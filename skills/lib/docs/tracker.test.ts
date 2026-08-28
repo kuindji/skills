@@ -127,6 +127,28 @@ describe("what the parser reads as a task", () => {
         ).toEqual([]);
     });
 
+    test("evidence inside an HTML comment does not count", () => {
+        // Found by the second gpt-5.5 review. The parser already refuses to
+        // read a commented-out row as state; the evidence line under one was
+        // read anyway, so a task could be marked done by evidence somebody
+        // had deliberately taken out of the file.
+        expect(
+            rules(
+                "## Done\n\n- [x] `A1` done\n  <!--\n  evidence: not real\n"
+                    + "  -->\n",
+            ),
+        ).toEqual([ "docs.trackerEvidence" ]);
+    });
+
+    test("evidence inside a fenced block does not count", () => {
+        expect(
+            rules(
+                "## Done\n\n- [x] `A1` done\n  ```\n  evidence: not real\n"
+                    + "  ```\n",
+            ),
+        ).toEqual([ "docs.trackerEvidence" ]);
+    });
+
     test("a commented-out example is not state", () => {
         // Found by the gpt-5.5 review. A row taken out of the file with an
         // HTML comment was still read as a task, so removing one reported a

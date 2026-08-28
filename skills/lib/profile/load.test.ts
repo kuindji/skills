@@ -205,6 +205,41 @@ tracker:
         });
     });
 
+    test("a product inherits the repository's tracker file", async () => {
+        // Every skill starts by resolving the profile that governs a path, so
+        // a product profile that cannot answer where the tracker is sends the
+        // reader looking for a file the profile does not name.
+        await withRepo({
+            "project-profile.yaml":
+                "tracker:\n  backend: in-repo\n  file: docs/tasks.md\n",
+            "docs/notes/project-profile.yaml":
+                "product: notes\npaths: [apps/notes]\n",
+        }, async (directory) => {
+            const result = await loadProfiles(directory);
+            expect(result.diagnostics).toEqual([]);
+            expect(result.index?.products[0]?.tracker.file).toBe(
+                "docs/tasks.md",
+            );
+        });
+    });
+
+    test("a product declaring its own tracker file is refused", async () => {
+        // Found by the second gpt-5.5 review. The tracker file is repo-wide,
+        // and everything that reads it now reads the root profile's, so a
+        // product declaring one was setting a key nothing would ever act on.
+        await withRepo({
+            "project-profile.yaml": ROOT,
+            "docs/notes/project-profile.yaml":
+                "product: notes\npaths: [apps/notes]\ntracker:\n"
+                + "  file: docs/notes/tasks.md\n",
+        }, async (directory) => {
+            const result = await loadProfiles(directory);
+            expect(result.diagnostics.map((d) => d.rule)).toContain(
+                "tracker.rootOnlyFile",
+            );
+        });
+    });
+
     /**
      * A nested repository need not declare a wiki or owners to be one. The
      * smallest real profile is a tracker and a docs root, and read as a

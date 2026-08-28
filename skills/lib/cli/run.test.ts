@@ -244,6 +244,42 @@ describe("the single-subject validators", () => {
     });
 
     /**
+     * The rules of the tracker class run over files classified as `tracker`,
+     * so a tracker file no glob claims is a file none of them ever see. The
+     * repository can declare the backend, name the file, write it, and have
+     * the rule that Done carries evidence silently not run.
+     */
+    test("a tracker no glob claims is reported, not passed over", async () => {
+        await withRepo({
+            ...BASE,
+            "project-profile.yaml": PROFILE.replace(
+                '  tracker: ["tasks.md"]\n',
+                "",
+            ),
+            "docs/ignored-note.md": "# Note\n",
+        }, async (directory) => {
+            const out = sink();
+            const code = await docsValidate([ "--repo", directory ], out.io);
+            expect(code).toBe(EXIT.failed);
+            expect(out.text()).toContain("docs.trackerUnchecked");
+            expect(out.text()).toContain("docs/tasks.md");
+        });
+    });
+
+    test("a repo with no docs root still answers for its tracker", async () => {
+        await withRepo({
+            "project-profile.yaml": "tracker:\n  backend: in-repo\n"
+                + "  file: docs/tasks.md\n",
+            "docs/tasks.md": TRACKER,
+        }, async (directory) => {
+            const out = sink();
+            const code = await docsValidate([ "--repo", directory ], out.io);
+            expect(code).toBe(EXIT.failed);
+            expect(out.text()).toContain("docs.trackerUnchecked");
+        });
+    });
+
+    /**
      * Two frames, one repository. `git ls-files` run in a subdirectory lists
      * paths relative to that subdirectory, so classification works and looks
      * correct, while `git log` names the same files relative to the repository
@@ -260,9 +296,11 @@ describe("the single-subject validators", () => {
 docs:
   root: docs
   live: ["guide.md"]
+  tracker: ["tasks.md"]
   review_after_days: 30
 `,
             "product/docs/guide.md": "# Guide\n",
+            "product/docs/tasks.md": TRACKER,
         }, async (directory) => {
             const out = sink();
             const code = await docsValidate(

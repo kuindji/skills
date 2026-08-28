@@ -81,7 +81,10 @@ export async function loadProfiles(
                 // is the only place that has both profiles. Left to its own
                 // parse, a product under a Linear tracker read as `in-repo`,
                 // which is the default rather than an answer.
-                inherit: { trackerBackend: root.tracker.backend },
+                inherit: {
+                    trackerBackend: root.tracker.backend,
+                    trackerFile: root.tracker.file,
+                },
             },
         );
         diagnostics.push(...result.diagnostics);

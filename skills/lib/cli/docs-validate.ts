@@ -1,3 +1,5 @@
+import type { ClassifiedDoc } from "../docs/classify";
+import { checkTrackerCovered } from "../docs/classify";
 import { validateDocs } from "../docs/scan";
 import { loadWikiPages } from "../wiki/scan";
 import { preflight } from "./args";
@@ -47,8 +49,12 @@ export async function checkDocs(context: Context): Promise<Check> {
 
     const withDocs = allProfiles(context).filter((profile) => profile.docs);
     if (withDocs.length === 0) {
+        // A repository with no docs root still has to answer for its tracker.
+        // An in-repo backend and no place to classify the file it names is
+        // the same silence as a missing glob, and the one this check exists
+        // for.
         return {
-            diagnostics: [],
+            diagnostics: checkTrackerCovered(context.root, []),
             notes: [ "No docs root declared, so no doc rules ran." ],
         };
     }
@@ -59,6 +65,10 @@ export async function checkDocs(context: Context): Promise<Check> {
     );
 
     const claimed = new Set<string>();
+    // The tracker is repo-wide and the profile that classifies it may be a
+    // product's, so the coverage check reads what every profile classified
+    // rather than any one result.
+    const classified: ClassifiedDoc[] = [];
     const specificFirst = [
         ...withDocs.filter((profile) => profile.product !== undefined),
         ...withDocs.filter((profile) => profile.product === undefined),
@@ -71,6 +81,7 @@ export async function checkDocs(context: Context): Promise<Check> {
         });
         for (const doc of result.files) {
             claimed.add(doc.path);
+            classified.push(doc);
         }
         diagnostics.push(...result.diagnostics);
         const where = profile.product === undefined
@@ -81,6 +92,8 @@ export async function checkDocs(context: Context): Promise<Check> {
                 + `${result.lifecycle.length} of them lifecycle.`,
         );
     }
+
+    diagnostics.push(...checkTrackerCovered(context.root, classified));
 
     return { diagnostics: dedupe(diagnostics), notes };
 }

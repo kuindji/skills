@@ -9,7 +9,6 @@ Ids are `<stage><n>`, stages following the build order in the design spec.
 
 ## Todo
 
-- [ ] `P3-04` `task-tracking` SKILL.md
 - [ ] `P3-05` Templates
 - [ ] `P4-01` `housekeeping` SKILL.md and the sweep
       note: the spec's drift worklist has pages declaring `watch_paths` in
@@ -25,6 +24,58 @@ Ids are `<stage><n>`, stages following the build order in the design spec.
 
 ## Done
 
+- [x] `P3-04` `task-tracking` SKILL.md
+      evidence: bun test — 531 pass, 12 of them new and every one written to
+      fail first, each verified red by reverting its fix; `bun run
+      skills/bin/project-validate.ts` still exits 0 here. The skill an agent
+      follows at task start, while the work is open and at finish, written
+      against the validators rather than the spec. The measure of that is the
+      same one `P3-02` and `P3-03` used: every rule the tracker validators can
+      emit was enumerated and held against the draft. Twelve of the thirteen
+      map to a sentence; `docs.trackerClass` is deliberately thin because
+      `project-docs` already owns the placement rules, and the profile schema's
+      unknown-backend error is not this skill's subject. End to end in a scratch
+      repository with this package installed as a dependency: a tracker written
+      by following the skill and nothing else, carrying nested steps, a
+      commented-out task, a deeper heading and an evidence line, and `bunx
+      docs-validate` exiting 0. Every claim about the file's shape was checked
+      against the tool rather than assumed, which caught two wordings of mine
+      that were wrong: an example that put a `###` heading after Done, where the
+      rule I had written was right and my example was not, and "indented
+      directly beneath", which the parser does not require.
+      Writing the skill found the fail-open behind most of this task. The
+      tracker rules run only over files classified `tracker`, so a repository
+      could declare `tracker.backend: in-repo`, name a `tracker.file`, write it,
+      and have every one of them silently not run: a tracker outside the docs
+      root reported nothing at all, and one inside it reported
+      `docs.unclassified`, which reads as a filing question rather than as the
+      tracker being unchecked. `docs.trackerUnchecked` now says so, including
+      where no docs root is declared and where the file is gitignored, which is
+      the same unreachability by another route. The second fault was mine to
+      make worse: `tracker.file` is repo-wide, so a product profile read
+      `undefined` and reported every file it classified as `tracker` as misfiled
+      against a tracker of that name. A product now inherits the file the way it
+      already inherited the backend, and declaring its own is refused.
+      Two gpt-5.5 rounds, five findings, each reproduced before it was acted on.
+      Round 1's worst was a fail-open on the one rule the class exists for:
+      `findEvidence` scanned ahead over raw lines rather than the ones the
+      parser reads, so an `evidence:` line inside an HTML comment satisfied a
+      Done row while the same comment hid the row from every other rule. Reading
+      it in the main loop fixes both that and the fenced case, and the fifteen
+      shapes probed afterwards, tabs, CR endings, steps between the row and the
+      line, an unclosed fence, behave as they did. Its other two were prose:
+      "each appearing once" reads as requiring all four sections, which the
+      validator does not, and a claim that a product profile carries nothing but
+      `tracker.project`, which the parser did not enforce until this task.
+      Round 2 found the one the refusal had created. The skill opens by telling
+      an agent to resolve the profile governing the path and read the tracker
+      out of it, and under a product profile that profile now had no file to
+      read. Inheritance is what makes that sentence true, and it also deletes
+      the option I had threaded through `classifyDocPaths` to work around it.
+      Round 2's other finding is answered in the skill rather than in code:
+      `evidence: done` passes the validator and fails the rule, because no tool
+      can read whether an evidence line is true, and the skill now says so
+      rather than implying the check is stricter than it is.
 - [x] `P3-03` `project-docs` SKILL.md
       evidence: bun test — 519 pass, 15 of them new and every one written to
       fail first; `bun run skills/bin/project-validate.ts` still exits 0 here.

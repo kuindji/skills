@@ -96,6 +96,16 @@ export function validateTrackerFile(
     const tasks: TrackerTask[] = [];
     /** The last top-level task row, which an indented row belongs to. */
     let parent: number | undefined;
+    /**
+     * The task whose continuation block we are still inside.
+     *
+     * Evidence is read here rather than by scanning ahead from the task row,
+     * so that it reads the same lines the rest of the parser reads. Scanned
+     * separately, an `evidence:` line inside a fence or an HTML comment
+     * satisfied the one rule this class exists for, while the same comment
+     * hid the row it belonged to from every other rule.
+     */
+    let open: TrackerTask | undefined;
     let fence: string | undefined;
     let commented = false;
 
@@ -134,9 +144,24 @@ export function validateTrackerFile(
             continue;
         }
 
+        // A task's continuation block is the run of indented lines under its
+        // row, and it ends at the first blank or unindented line. Measured on
+        // the raw line: a line holding nothing but a comment is invisible
+        // rather than absent, and ending the block there would detach the
+        // evidence written below it.
+        if (open !== undefined) {
+            if (raw.trim() === "" || !/^[ \t]/.test(raw)) {
+                open = undefined;
+            }
+            else if (open.evidence === undefined) {
+                open.evidence = EVIDENCE_RE.exec(line)?.[1]?.trim();
+            }
+        }
+
         const heading = HEADING_RE.exec(line);
         if (heading && heading[1]?.length === 2) {
             parent = undefined;
+            open = undefined;
             const title = heading[2] ?? "";
             const known = matchSection(title);
             if (known === undefined) {
@@ -234,14 +259,15 @@ export function validateTrackerFile(
             continue;
         }
 
-        tasks.push({
+        const entry: TrackerTask = {
             id: leadingId(text),
             section,
             line: lineNumber,
             checked: (task[2] ?? " ") !== " ",
             text,
-            evidence: findEvidence(lines, index),
-        });
+        };
+        tasks.push(entry);
+        open = entry;
     }
 
     for (const task of tasks) {
@@ -252,33 +278,6 @@ export function validateTrackerFile(
     checkUniqueIds(path, tasks, diagnostics);
 
     return diagnostics;
-}
-
-/**
- * The evidence line belonging to the task on `taskIndex`.
- *
- * Evidence is written as indented continuation lines under the row, which is
- * how it reads in a rendered list and how it stays attached to its task
- * through an edit. The block ends at the first line that is not indented
- * continuation: the next task, the next heading, or a blank line.
- */
-function findEvidence(
-    lines: string[],
-    taskIndex: number,
-): string | undefined {
-    for (let index = taskIndex + 1; index < lines.length; index++) {
-        const line = lines[index] ?? "";
-        // The next task row is not indented, so the same test that ends the
-        // block ends it there too.
-        if (line.trim() === "" || !/^[ \t]/.test(line)) {
-            return undefined;
-        }
-        const evidence = EVIDENCE_RE.exec(line);
-        if (evidence) {
-            return evidence[1]?.trim();
-        }
-    }
-    return undefined;
 }
 
 /**

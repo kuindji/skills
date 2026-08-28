@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { parseProfile } from "../profile/parse";
 import type { Profile } from "../profile/types";
-import { classifyDocPaths } from "./classify";
+import { checkTrackerCovered, classifyDocPaths } from "./classify";
 
 function profileFrom(yaml: string): Profile {
     const result = parseProfile(yaml, "/repo/project-profile.yaml");
@@ -171,6 +171,49 @@ docs:
         expect(result.files[0]?.docClass).toBe("tracker");
     });
 
+    test("a product profile does not report `undefined` as the tracker", () => {
+        // `tracker.file` is repo-wide and only the root profile carries it, so
+        // a product profile reading its own is reading nothing. It reported
+        // the absence as a violation, naming `undefined` as the tracker the
+        // file should have been.
+        const product = parseProfile(
+            `product: notes\npaths: ["apps/notes"]\ndocs:\n  root: apps/notes/docs\n  tracker: ["tasks.md"]\n`,
+            "/repo/apps/notes/project-profile.yaml",
+            { kind: "product", inherit: { trackerBackend: "in-repo" } },
+        ).profile!;
+        const result = classifyDocPaths(product, [
+            "apps/notes/docs/tasks.md",
+        ]);
+        expect(result.diagnostics).toEqual([]);
+    });
+
+    test("the repo's tracker file can sit under a product's docs root", () => {
+        const under = (trackerFile: string) =>
+            parseProfile(
+                `product: notes\npaths: ["apps/notes"]\ndocs:\n  root: apps/notes/docs\n  tracker: ["tasks.md"]\n  live: ["README.md"]\n`,
+                "/repo/apps/notes/project-profile.yaml",
+                {
+                    kind: "product",
+                    inherit: { trackerBackend: "in-repo", trackerFile },
+                },
+            ).profile!;
+
+        const covered = classifyDocPaths(
+            under("apps/notes/docs/tasks.md"),
+            [ "apps/notes/docs/tasks.md" ],
+        );
+        expect(covered.diagnostics).toEqual([]);
+
+        const elsewhere = classifyDocPaths(
+            under("docs/tasks.md"),
+            [ "apps/notes/docs/tasks.md" ],
+        );
+        const d = elsewhere.diagnostics.find(
+            (d) => d.rule === "docs.trackerAuthority",
+        );
+        expect(d?.message).toContain("docs/tasks.md");
+    });
+
     test("a second file in the tracker class is a second authority", () => {
         const twoTrackers = profileFrom(`
 tracker:
@@ -190,6 +233,46 @@ docs:
         expect(d).toBeDefined();
         expect(d?.message).toContain("docs/backlog.md");
         expect(d?.message).toContain("docs/tasks.md");
+    });
+});
+
+describe("the tracker file is covered by a tracker glob", () => {
+    test("a tracker no glob claims is an error naming what stopped", () => {
+        // The rules of the tracker class run over files classified as
+        // `tracker`, so a tracker file no glob matches is a file none of them
+        // ever see. A repo can declare an in-repo backend, write the file, and
+        // have every rule that makes "done" mean something silently not run.
+        const uncovered = profileFrom(`
+tracker:
+  backend: in-repo
+  file: TODO.md
+docs:
+  root: docs
+  live: ["README.md"]
+`);
+        const found = checkTrackerCovered(uncovered, []);
+        expect(found.map((d) => d.rule)).toEqual([ "docs.trackerUnchecked" ]);
+        expect(found[0]?.message).toContain("TODO.md");
+        expect(found[0]?.remedy).toContain("docs.tracker");
+    });
+
+    test("a claimed tracker reports nothing", () => {
+        const found = checkTrackerCovered(STANDARD, [
+            { path: "docs/tasks.md", docClass: "tracker" },
+        ]);
+        expect(found).toEqual([]);
+    });
+
+    test("the same file under another class does not count as claimed", () => {
+        const found = checkTrackerCovered(STANDARD, [
+            { path: "docs/tasks.md", docClass: "live" },
+        ]);
+        expect(found.map((d) => d.rule)).toEqual([ "docs.trackerUnchecked" ]);
+    });
+
+    test("an external backend has no file to cover", () => {
+        const external = profileFrom("tracker:\n  backend: clickup\n");
+        expect(checkTrackerCovered(external, [])).toEqual([]);
     });
 });
 
