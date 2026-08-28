@@ -17,7 +17,7 @@ describe("claiming a path", () => {
     });
 
     test("a wildcard segment claims the subtree beneath it", () => {
-        expect(claims("packages/sleep-*", "packages/sleep-domain/src/i.ts"))
+        expect(claims("packages/notes-*", "packages/notes-domain/src/i.ts"))
             .toBe(true);
     });
 
@@ -25,12 +25,12 @@ describe("claiming a path", () => {
         expect(claims("hasura/**/*.yaml", "hasura/tables.yaml")).toBe(true);
         expect(claims("hasura/**/*.yaml", "hasura/a/b/tables.yaml")).toBe(true);
         expect(claims("**/expo-env.d.ts", "expo-env.d.ts")).toBe(true);
-        expect(claims("**/expo-env.d.ts", "apps/detector/expo-env.d.ts"))
+        expect(claims("**/expo-env.d.ts", "apps/quiz/expo-env.d.ts"))
             .toBe(true);
     });
 
     test("a wildcard segment does not span a directory boundary", () => {
-        expect(claims("apps/*/ios/**", "apps/detector/ios/Podfile")).toBe(true);
+        expect(claims("apps/*/ios/**", "apps/quiz/ios/Podfile")).toBe(true);
         expect(claims("apps/*/ios/**", "apps/a/b/ios/Podfile")).toBe(false);
     });
 
@@ -77,7 +77,7 @@ describe("colliding patterns", () => {
     });
 
     test("siblings do not collide", () => {
-        expect(patternsCollide("apps/detector", "apps/game")).toBe(false);
+        expect(patternsCollide("apps/quiz", "apps/arcade")).toBe(false);
     });
 
     test("a trailing slash does not hide a collision", () => {

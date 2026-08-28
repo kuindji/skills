@@ -9,10 +9,10 @@ nothing in them is read.
 
 ## Profiles
 
-| Fixture        | Exercises                                                                                                                        |
-| -------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| `bearingkind/` | Four products, an owners block with a complement default, a shared owner, per-product roadmaps, per-path mode overrides, Linear. |
-| `thefloorr/`   | Dual wiki profiles with a self-contained business subtree, an external tracker, mature mode, no roadmap.                         |
+| Fixture                  | Exercises                                                                                                                        |
+| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------- |
+| `multi-product/`         | Four products, an owners block with a complement default, a shared owner, per-product roadmaps, per-path mode overrides, Linear. |
+| `mature-single-product/` | Dual wiki profiles with a self-contained business subtree, an external tracker, mature mode, no roadmap.                         |
 
 ## Wiki
 

@@ -12,7 +12,7 @@ function profileFrom(yaml: string): Profile {
     return result.profile;
 }
 
-const BEARINGKIND = profileFrom(`
+const MULTI_CLONE = profileFrom(`
 tracker:
   backend: linear
 owners:
@@ -20,37 +20,37 @@ owners:
     paths: [packages/ui, apps/ui-showcase, web, docs/wiki, scripts]
     shared: true
     default: true
-  baby-sleep:
-    paths: [apps/baby-sleep-tracker, "packages/sleep-*", docs/baby-sleep-tracker]
-  detector-game:
-    paths: [apps/detector, apps/game, docs/detector]
-  relocant:
-    paths: [backend/relocant, docs/relocant]
+  notes:
+    paths: [apps/notes-app, "packages/notes-*", docs/notes-app]
+  quiz-arcade:
+    paths: [apps/quiz, apps/arcade, docs/quiz]
+  portal:
+    paths: [backend/portal, docs/portal]
 `);
 
 describe("ownerForPath", () => {
     test("an explicit owner claims its own subtree", () => {
         expect(
-            ownerForPath(BEARINGKIND, "apps/baby-sleep-tracker/src/app.tsx")
+            ownerForPath(MULTI_CLONE, "apps/notes-app/src/app.tsx")
                 ?.name,
-        ).toBe("baby-sleep");
+        ).toBe("notes");
     });
 
     test("a glob in a path claims matching siblings", () => {
         expect(
-            ownerForPath(BEARINGKIND, "packages/sleep-domain/src/index.ts")
+            ownerForPath(MULTI_CLONE, "packages/notes-domain/src/index.ts")
                 ?.name,
-        ).toBe("baby-sleep");
+        ).toBe("notes");
     });
 
     test("the default owner claims what no explicit owner matched", () => {
-        expect(ownerForPath(BEARINGKIND, "package.json")?.name).toBe("main");
-        expect(ownerForPath(BEARINGKIND, "bun.lock")?.name).toBe("main");
+        expect(ownerForPath(MULTI_CLONE, "package.json")?.name).toBe("main");
+        expect(ownerForPath(MULTI_CLONE, "bun.lock")?.name).toBe("main");
     });
 
     test("an explicit claim beats the default owner's own listed paths", () => {
         // docs/wiki is listed under main, which is also the default.
-        expect(ownerForPath(BEARINGKIND, "docs/wiki/ui.md")?.name).toBe("main");
+        expect(ownerForPath(MULTI_CLONE, "docs/wiki/ui.md")?.name).toBe("main");
     });
 
     test("with no owners declared, every path is unowned", () => {
@@ -62,17 +62,17 @@ describe("ownerForPath", () => {
 describe("writeIsAllowed", () => {
     test("a clone may write inside its own paths", () => {
         const verdict = writeIsAllowed(
-            BEARINGKIND,
-            "baby-sleep",
-            "apps/baby-sleep-tracker/src/app.tsx",
+            MULTI_CLONE,
+            "notes",
+            "apps/notes-app/src/app.tsx",
         );
         expect(verdict.allowed).toBe(true);
     });
 
     test("a product clone may not write a shared package", () => {
         const verdict = writeIsAllowed(
-            BEARINGKIND,
-            "baby-sleep",
+            MULTI_CLONE,
+            "notes",
             "packages/ui/src/Button.tsx",
         );
         expect(verdict.allowed).toBe(false);
@@ -82,26 +82,26 @@ describe("writeIsAllowed", () => {
 
     test("a product clone may not write another product's paths", () => {
         const verdict = writeIsAllowed(
-            BEARINGKIND,
-            "baby-sleep",
-            "apps/detector/src/index.ts",
+            MULTI_CLONE,
+            "notes",
+            "apps/quiz/src/index.ts",
         );
         expect(verdict.allowed).toBe(false);
-        expect(verdict.reason).toContain("detector-game");
+        expect(verdict.reason).toContain("quiz-arcade");
     });
 
     test("the shared owner may write anywhere it owns", () => {
         expect(
-            writeIsAllowed(BEARINGKIND, "main", "packages/ui/src/Button.tsx")
+            writeIsAllowed(MULTI_CLONE, "main", "packages/ui/src/Button.tsx")
                 .allowed,
         ).toBe(true);
-        expect(writeIsAllowed(BEARINGKIND, "main", "bun.lock").allowed).toBe(
+        expect(writeIsAllowed(MULTI_CLONE, "main", "bun.lock").allowed).toBe(
             true,
         );
     });
 
     test("an unknown owner name is refused rather than assumed", () => {
-        const verdict = writeIsAllowed(BEARINGKIND, "typo", "package.json");
+        const verdict = writeIsAllowed(MULTI_CLONE, "typo", "package.json");
         expect(verdict.allowed).toBe(false);
         expect(verdict.reason).toContain("typo");
     });
@@ -126,19 +126,19 @@ describe("writeIsAllowed", () => {
  */
 describe("how an owner matched", () => {
     test("a listed path of an explicit owner matches explicitly", () => {
-        const match = resolveOwner(BEARINGKIND, "apps/detector/src/a.tsx");
-        expect(match?.owner.name).toBe("detector-game");
+        const match = resolveOwner(MULTI_CLONE, "apps/quiz/src/a.tsx");
+        expect(match?.owner.name).toBe("quiz-arcade");
         expect(match?.via).toBe("explicit");
     });
 
     test("a listed path of the default owner matches explicitly", () => {
-        const match = resolveOwner(BEARINGKIND, "packages/ui/src/Button.tsx");
+        const match = resolveOwner(MULTI_CLONE, "packages/ui/src/Button.tsx");
         expect(match?.owner.name).toBe("main");
         expect(match?.via).toBe("explicit");
     });
 
     test("a path nobody listed reaches the default owner by complement", () => {
-        const match = resolveOwner(BEARINGKIND, "bun.lock");
+        const match = resolveOwner(MULTI_CLONE, "bun.lock");
         expect(match?.owner.name).toBe("main");
         expect(match?.via).toBe("default");
     });
@@ -180,13 +180,13 @@ owners:
     paths: [docs]
     shared: true
     default: true
-  baby-sleep:
-    paths: [docs/baby-sleep-tracker]
+  notes:
+    paths: [docs/notes-app]
 `);
 
     test("an explicit owner wins even when the default is declared first", () => {
-        const path = "docs/baby-sleep-tracker/plan.md";
-        expect(ownerForPath(OVERLAPPING, path)?.name).toBe("baby-sleep");
-        expect(resolveOwner(OVERLAPPING, path)?.owner.name).toBe("baby-sleep");
+        const path = "docs/notes-app/plan.md";
+        expect(ownerForPath(OVERLAPPING, path)?.name).toBe("notes");
+        expect(resolveOwner(OVERLAPPING, path)?.owner.name).toBe("notes");
     });
 });

@@ -58,7 +58,7 @@ export function guardChange(input: GuardInput): Diagnostic[] {
     // forms part company here. A leading `./` means exactly what its absence
     // means and is dropped; an absolute path or one climbing through `..`
     // cannot be resolved without knowing the repo root, and guessing would
-    // attribute `docs/../apps/detector/x.ts` to whoever owns `docs`.
+    // attribute `docs/../apps/quiz/x.ts` to whoever owns `docs`.
     const paths: string[] = [];
     for (const raw of [ ...input.paths ].sort()) {
         if (!isRepoRelative(raw) || normalise(raw) === "") {

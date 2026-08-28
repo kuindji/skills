@@ -2,8 +2,8 @@ import type { Diagnostic } from "../profile/types";
 import { bodyLinks, FRONTMATTER_KEYS, type WikiPage, wordCount } from "./page";
 
 /**
- * The graph rules, carried over from the validator TheFloorr's wiki has run
- * under since it was written.
+ * The graph rules, carried over from the validator a mature commerce wiki has
+ * run under since it was written.
  *
  * They exist because a wiki is only navigable if its edges are real. Prose
  * that mentions a related page is not an edge: nothing can walk it, nothing

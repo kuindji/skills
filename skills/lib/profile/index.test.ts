@@ -26,44 +26,44 @@ wiki:
     "root",
 );
 
-const BABY = profileFrom(
+const NOTES = profileFrom(
     `
-product: baby-sleep-tracker
-paths: [apps/baby-sleep-tracker, "packages/sleep-*"]
+product: notes-app
+paths: [apps/notes-app, "packages/notes-*"]
 roadmap: ./milestones.md
 mode:
   default: greenfield
   overrides:
-    packages/sleep-domain: mature
+    packages/notes-domain: mature
 `,
-    "/repo/docs/baby-sleep-tracker/project-profile.yaml",
+    "/repo/docs/notes-app/project-profile.yaml",
 );
 
-const DETECTOR = profileFrom(
+const QUIZ = profileFrom(
     `
-product: detector
-paths: [apps/detector, apps/game]
+product: quiz
+paths: [apps/quiz, apps/arcade]
 mode:
   default: greenfield
 `,
-    "/repo/docs/detector/project-profile.yaml",
+    "/repo/docs/quiz/project-profile.yaml",
 );
 
 describe("productForPath", () => {
-    const index = buildProductIndex(ROOT, [ BABY, DETECTOR ]);
+    const index = buildProductIndex(ROOT, [ NOTES, QUIZ ]);
 
     test("a path inside a product's claim resolves to that product", () => {
         expect(
-            productForPath(index, "apps/baby-sleep-tracker/src/app.tsx")
+            productForPath(index, "apps/notes-app/src/app.tsx")
                 ?.product,
-        ).toBe("baby-sleep-tracker");
+        ).toBe("notes-app");
     });
 
     test("a globbed claim resolves too", () => {
         expect(
-            productForPath(index, "packages/sleep-domain/src/index.ts")
+            productForPath(index, "packages/notes-domain/src/index.ts")
                 ?.product,
-        ).toBe("baby-sleep-tracker");
+        ).toBe("notes-app");
     });
 
     test("an unclaimed path falls back to the root profile", () => {
@@ -82,26 +82,26 @@ describe("overlap", () => {
         const rival = profileFrom(
             `
 product: rival
-paths: [apps/baby-sleep-tracker]
+paths: [apps/notes-app]
 `,
             "/repo/docs/rival/project-profile.yaml",
         );
-        const index = buildProductIndex(ROOT, [ BABY, rival ]);
+        const index = buildProductIndex(ROOT, [ NOTES, rival ]);
         const d = index.diagnostics.find((d) => d.rule === "products.overlap");
         expect(d).toBeDefined();
-        expect(d?.message).toContain("baby-sleep-tracker");
+        expect(d?.message).toContain("notes-app");
         expect(d?.message).toContain("rival");
     });
 
     test("two products may not share a name", () => {
         const twin = profileFrom(
             `
-product: baby-sleep-tracker
+product: notes-app
 paths: [apps/other]
 `,
             "/repo/docs/other/project-profile.yaml",
         );
-        const index = buildProductIndex(ROOT, [ BABY, twin ]);
+        const index = buildProductIndex(ROOT, [ NOTES, twin ]);
         expect(
             index.diagnostics.some((d) => d.rule === "products.duplicateName"),
         ).toBe(true);
@@ -120,16 +120,16 @@ paths: [apps/other]
 });
 
 describe("modeForPath", () => {
-    const index = buildProductIndex(ROOT, [ BABY, DETECTOR ]);
+    const index = buildProductIndex(ROOT, [ NOTES, QUIZ ]);
 
     test("uses the product's default where no override applies", () => {
-        expect(modeForPath(index, "apps/baby-sleep-tracker/src/app.tsx")).toBe(
+        expect(modeForPath(index, "apps/notes-app/src/app.tsx")).toBe(
             "greenfield",
         );
     });
 
     test("an override wins for its subtree", () => {
-        expect(modeForPath(index, "packages/sleep-domain/src/rules.ts")).toBe(
+        expect(modeForPath(index, "packages/notes-domain/src/rules.ts")).toBe(
             "mature",
         );
     });

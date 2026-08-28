@@ -24,8 +24,8 @@ describe("resolveCurrentOwner", () => {
         const scratch = await mkdtemp(join(tmpdir(), "owner-"));
         try {
             await gitInit(scratch);
-            await writeFile(join(scratch, ".agent-owner"), "baby-sleep\n");
-            expect(await resolveCurrentOwner(scratch)).toBe("baby-sleep");
+            await writeFile(join(scratch, ".agent-owner"), "notes\n");
+            expect(await resolveCurrentOwner(scratch)).toBe("notes");
         }
         finally {
             await rm(scratch, { recursive: true, force: true });

@@ -1,4 +1,4 @@
-# BearingKind: one repository, four products, cloned once per product.
+# A mobile monorepo: one repository, four products, cloned once per product.
 # Each clone may only write inside the paths its owner claims.
 
 wiki:
@@ -28,23 +28,23 @@ owners:
       [packages/ui, apps/ui-showcase, web, docs/wiki, docs/specs, scripts]
     shared: true
     default: true
-  baby-sleep:
+  notes:
     paths:
       [
-        apps/baby-sleep-tracker,
-        "packages/sleep-*",
-        docs/baby-sleep-tracker,
+        apps/notes-app,
+        "packages/notes-*",
+        docs/notes-app,
       ]
-  detector-game:
+  quiz-arcade:
     paths:
       [
-        apps/detector,
-        apps/game,
-        # A brace list, which is how the real table names three packages that
-        # share no prefix.
+        apps/quiz,
+        apps/arcade,
+        # A brace list, which is how the source repo's ownership table names
+        # three packages that share no prefix.
         "packages/{taxonomy,analysis,persistence}",
-        docs/detector,
-        docs/game,
+        docs/quiz,
+        docs/arcade,
       ]
-  relocant:
-    paths: [backend/relocant, docs/relocant]
+  portal:
+    paths: [backend/portal, docs/portal]

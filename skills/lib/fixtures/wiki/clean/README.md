@@ -8,6 +8,6 @@ last_updated: 2026-08-27
 
 The root of a wiki that satisfies every graph rule.
 
-- [[business]] is a self-contained subtree, the shape TheFloorr ships to its
-  assistant.
+- [[business]] is a self-contained subtree, the shape a wiki takes when one
+  section ships on its own to an assistant.
 - [[services]] is an ordinary technical section with one child.

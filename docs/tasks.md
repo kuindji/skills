@@ -28,8 +28,8 @@ Ids are `<stage><n>`, stages following the build order in the design spec.
 - [x] `P2-06` `guard-generated`: generated paths and clone write scope
       evidence: bun test skills/lib/guard — 58 pass; 398 across the repo. The
       rules as a library; the bin lands with the others at `P2-07`. The design
-      turns on one measurement: all four `generated_paths` patterns BearingKind
-      declares are gitignored and have never been tracked in 701 commits, while
+      turns on one measurement: all four `generated_paths` patterns the mobile
+      monorepo declares are gitignored and have never been tracked in 701 commits, while
       more than five thousand matching files sit on disk. A guard reading a
       diff would have reported that repo perfectly clean while missing every
       path it was installed to protect, so `guardChange` takes a list of paths
@@ -41,8 +41,8 @@ Ids are `<stage><n>`, stages following the build order in the design spec.
       severity would refuse every routine install, so an explicit claim errors
       and the complement warns. Replayed against all 701, 88.7% of real commits
       are legal from at least one clone and the 11.3% that are not are the
-      cross-scope changes the rule exists for; TheFloorr reports 108 generated
-      touches over 23 of 800 commits, and this repo 0 over 12. Warning volume
+      cross-scope changes the rule exists for; the commerce repo reports 108
+      generated touches over 23 of 800 commits, and this repo 0 over 12. Warning volume
       was measured too, and twice cut: blast-radius and unclaimed-path warnings
       are now one per change rather than one per file, after single commits
       turned up carrying 60 copies of the same sentence. Every commit now draws
@@ -70,7 +70,7 @@ Ids are `<stage><n>`, stages following the build order in the design spec.
       repositories, all read-only and dry-run: 220 date-named documents under
       `specs/` and `plans/`, and not one carries frontmatter at all. That is
       the whole argument for the sweep swallowing `noFrontmatter` and
-      `notShipped` — a first run against Riskore would otherwise print 49
+      `notShipped` — a first run against the business-wiki repo would print 49
       errors about documents nobody asked about, and naming a path is what
       turns the refusal back on. Probing thirteen awkward frontmatter shapes
       found that a flow collection split over several lines is valid YAML the
@@ -87,8 +87,9 @@ Ids are `<stage><n>`, stages following the build order in the design spec.
       recoverable and a corrupt document is not.
 - [x] `P2-04` `docs-validate`: live, tracker and no-class-match
       evidence: bun test skills/lib/docs — 121 pass. Review age is calibrated
-      against three real repositories: BearingKind reports 26 live-shaped
-      documents and none past 90 days, Riskore 17 and none, TheFloorr 85 and 66,
+      against three real repositories: the mobile monorepo reports 26 live-shaped
+      documents and none past 90 days, the business-wiki repo 17 and none,
+      the commerce repo 85 and 66,
       with a median age of 214 days and the oldest at 2191. A mature repo
       producing 66 of them is why the rule warns rather than errors. The tracker
       rules pointed at real checkbox-carrying documents that are not trackers
@@ -103,26 +104,26 @@ Ids are `<stage><n>`, stages following the build order in the design spec.
 - [x] `P2-03` `docs-validate`: lifecycle class
       evidence: bun test skills/lib/docs — 73 pass, incl. real git repositories
       built for the merge-commit, non-ASCII-path and shallow-clone cases. Against
-      BearingKind's detector docs: 6 lifecycle documents found, all correctly
+      the mobile monorepo's per-product docs: 6 lifecycle documents found, all
       date-named, each reporting exactly one missing-frontmatter error, because
       those real specs and plans carry status in bold prose and nothing marks the
       moment they stopped being open. Against this repo: 1 doc, 0 diagnostics.
       gpt-5.5 review found three bypasses, all reproduced before fixing.
 - [x] `P2-02` `wiki-validate`: position bans and `path_citations` policy
       evidence: bun test skills/lib/wiki — 104 pass. Calibrated against the real
-      corpora: 200 line-number errors on 21 of TheFloorr's 152 pages, matching an
+      corpora: 200 line-number errors on 21 of the commerce wiki's 152 pages,
       independent grep of the same pattern exactly, and 1105 path references on
       107 pages reported as a count because that project sanctions them; 50
-      path-citation errors on Riskore, which forbids them; the tree rule verified
-      against a real 31-row tree in BearingKind's APP_ARCHITECTURE.md.
+      path-citation errors on the business-wiki repo, which forbids them; the tree
+      rule verified against a real 31-row tree in the mobile monorepo's wiki.
       Measuring, rather than guessing, is what found every false positive: the
       first version masked inline code and so saw 7 of the 200 line numbers,
       because 1065 of 1100 path references in that wiki live inside backticks.
       gpt-5.5 review found five more, all reproduced before fixing.
 - [x] `P2-01` `wiki-validate`: carried-over graph rules
       evidence: bun test skills/lib/wiki — 56 pass; and against the corpus it was
-      carried over from, 152 pages and 0 errors, the same counts TheFloorr's own
-      validator reports. The three BearingKind wikis, which never ran it, each
+      carried over from, 152 pages and 0 errors, the same counts that project's own
+      validator reports. The three mobile-monorepo wikis, which never ran it,
       report 8 errors, including a `dear-child` placeholder committed as a README
       child. Reviewed by gpt-5.5; its one reproducible finding, a
       `business_subtree` written with a trailing slash silently disabling the
@@ -131,7 +132,7 @@ Ids are `<stage><n>`, stages following the build order in the design spec.
       evidence: bun test skills/lib/docs — README.md classifies as live
 - [x] `P1-06` Dead-glob detection
       evidence: bun test skills/lib/docs — caught `plans/*.md` and the dead `live: [README.md]` in this repo's own profile
-- [x] `P1-05` Profile fixtures for BearingKind and TheFloorr shapes
+- [x] `P1-05` Profile fixtures for the multi-product and mature shapes
       evidence: bun test skills/lib/fixtures — 10 pass
 - [x] `P1-04` Path-to-product index, non-overlap checking
       evidence: bun test skills/lib/profile/index.test.ts — 10 pass

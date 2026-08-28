@@ -1,10 +1,11 @@
-# TheFloorr: single product, mature, ships continuously.
+# A mature commerce monorepo: single product, ships continuously.
 # No roadmap, because there is no discrete release event to sequence toward.
 
 wiki:
   root: docs/wiki
   profiles: [business, technical]
-  # Ships alone inside the ai-assistant Lambda, so it may not link outward.
+  # Ships alone inside a separate assistant service, so it may not link
+  # outward.
   business_subtree: business
   # A deliberate parenthetical citation convention across many pages.
   path_citations: citation
@@ -24,7 +25,7 @@ docs:
   root: docs
   lifecycle: ["specs/*.md"]
   live: ["README.md"]
-  reference: ["handover/**", "awin/**"]
+  reference: ["handover/**", "partners/**"]
   ignored: ["superpowers/**"]
 
 mode:

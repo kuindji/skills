@@ -11,7 +11,7 @@ function profileFrom(yaml: string): Profile {
     return result.profile;
 }
 
-/** The BearingKind shape: four clones, a shared complement default. */
+/** A four-product repo: four clones, a shared complement default. */
 const MULTI_CLONE = profileFrom(`
 tracker:
   backend: linear
@@ -23,13 +23,13 @@ owners:
     paths: [packages/ui, apps/ui-showcase, docs/wiki]
     shared: true
     default: true
-  baby-sleep:
-    paths: [apps/baby-sleep-tracker, "packages/sleep-*"]
-  detector-game:
-    paths: [apps/detector, apps/game]
+  notes:
+    paths: [apps/notes-app, "packages/notes-*"]
+  quiz-arcade:
+    paths: [apps/quiz, apps/arcade]
 `);
 
-/** The TheFloorr shape: one clone, no owners, tracked generated output. */
+/** A mature single-product repo: one clone, no owners, tracked output. */
 const SINGLE_CLONE = profileFrom(`
 tracker:
   backend: clickup
@@ -73,7 +73,7 @@ describe("touching a generated file", () => {
     test("holds for a path git would never report", () => {
         const diagnostics = guardChange({
             profile: MULTI_CLONE,
-            paths: [ "apps/detector/ios/Podfile" ],
+            paths: [ "apps/quiz/ios/Podfile" ],
         });
         expect(rules(diagnostics)).toContain("guard.generatedPath");
     });
@@ -162,7 +162,7 @@ describe("a path that is not plainly repo-relative", () => {
     });
 
     /**
-     * `docs/../apps/detector/x.ts` is a path inside `apps/detector`, but
+     * `docs/../apps/quiz/x.ts` is a path inside `apps/quiz`, but
      * matched as text it starts with `docs/` and would be attributed to
      * whoever owns `docs`. The guard cannot resolve it without the repo root,
      * so it says so instead of guessing.
@@ -170,8 +170,8 @@ describe("a path that is not plainly repo-relative", () => {
     test("a path climbing out of a directory is refused, not attributed", () => {
         const [ diagnostic ] = guardChange({
             profile: MULTI_CLONE,
-            currentOwner: "baby-sleep",
-            paths: [ "docs/wiki/../../apps/detector/x.ts" ],
+            currentOwner: "notes",
+            paths: [ "docs/wiki/../../apps/quiz/x.ts" ],
         });
         expect(diagnostic?.rule).toBe("guard.unrelativePath");
     });
@@ -203,26 +203,26 @@ describe("writing outside the current clone's scope", () => {
     test("writing inside its own scope is allowed", () => {
         expect(guardChange({
             profile: MULTI_CLONE,
-            currentOwner: "baby-sleep",
-            paths: [ "apps/baby-sleep-tracker/src/app.tsx" ],
+            currentOwner: "notes",
+            paths: [ "apps/notes-app/src/app.tsx" ],
         })).toEqual([]);
     });
 
     test("another owner's explicit claim is refused", () => {
         const [ diagnostic ] = guardChange({
             profile: MULTI_CLONE,
-            currentOwner: "baby-sleep",
-            paths: [ "apps/detector/src/index.ts" ],
+            currentOwner: "notes",
+            paths: [ "apps/quiz/src/index.ts" ],
         });
         expect(diagnostic?.rule).toBe("guard.ownerScope");
         expect(diagnostic?.severity).toBe("error");
-        expect(diagnostic?.message).toContain("detector-game");
+        expect(diagnostic?.message).toContain("quiz-arcade");
     });
 
     test("a shared package claimed by the default owner is refused", () => {
         const [ diagnostic ] = guardChange({
             profile: MULTI_CLONE,
-            currentOwner: "baby-sleep",
+            currentOwner: "notes",
             paths: [ "packages/ui/src/Button.tsx" ],
         });
         expect(diagnostic?.rule).toBe("guard.ownerScope");
@@ -239,7 +239,7 @@ describe("writing outside the current clone's scope", () => {
     test("a path nobody claimed is noted, not refused", () => {
         const [ diagnostic ] = guardChange({
             profile: MULTI_CLONE,
-            currentOwner: "baby-sleep",
+            currentOwner: "notes",
             paths: [ "bun.lock" ],
         });
         expect(diagnostic?.rule).toBe("guard.unclaimedPath");
@@ -254,7 +254,7 @@ describe("writing outside the current clone's scope", () => {
     test("many unclaimed paths are noted once, with the count", () => {
         const diagnostics = guardChange({
             profile: MULTI_CLONE,
-            currentOwner: "baby-sleep",
+            currentOwner: "notes",
             paths: [ "reference/a.swift", "reference/b.swift", "bun.lock" ],
         });
         expect(diagnostics).toHaveLength(1);
@@ -306,7 +306,7 @@ owners:
         const [ diagnostic ] = guardChange({
             profile: MULTI_CLONE,
             currentOwner: undefined,
-            paths: [ "apps/detector/x.ts" ],
+            paths: [ "apps/quiz/x.ts" ],
         });
         expect(diagnostic?.rule).toBe("guard.ownerUnresolved");
         expect(diagnostic?.severity).toBe("error");
@@ -326,11 +326,11 @@ owners:
         const [ diagnostic ] = guardChange({
             profile: MULTI_CLONE,
             currentOwner: "baby-sleap",
-            paths: [ "apps/baby-sleep-tracker/x.ts" ],
+            paths: [ "apps/notes-app/x.ts" ],
         });
         expect(diagnostic?.rule).toBe("guard.unknownOwner");
         expect(diagnostic?.message).toContain("baby-sleap");
-        expect(diagnostic?.remedy).toContain("detector-game");
+        expect(diagnostic?.remedy).toContain("quiz-arcade");
     });
 });
 
@@ -386,8 +386,8 @@ describe("changing a shared owner's code", () => {
     test("does not fire for an owner that is not shared", () => {
         expect(guardChange({
             profile: MULTI_CLONE,
-            currentOwner: "baby-sleep",
-            paths: [ "apps/baby-sleep-tracker/src/app.tsx" ],
+            currentOwner: "notes",
+            paths: [ "apps/notes-app/src/app.tsx" ],
         })).toEqual([]);
     });
 });
@@ -396,32 +396,32 @@ describe("a change breaking several rules", () => {
     test("reports each rule against the path it applies to", () => {
         const diagnostics = guardChange({
             profile: MULTI_CLONE,
-            currentOwner: "baby-sleep",
+            currentOwner: "notes",
             paths: [
-                "apps/baby-sleep-tracker/expo-env.d.ts",
-                "apps/detector/src/index.ts",
-                "apps/baby-sleep-tracker/src/app.tsx",
+                "apps/notes-app/expo-env.d.ts",
+                "apps/quiz/src/index.ts",
+                "apps/notes-app/src/app.tsx",
             ],
         });
-        expect(rules(forFile(diagnostics, "apps/detector/src/index.ts")))
+        expect(rules(forFile(diagnostics, "apps/quiz/src/index.ts")))
             .toEqual([ "guard.ownerScope" ]);
         expect(
             rules(
-                forFile(diagnostics, "apps/baby-sleep-tracker/expo-env.d.ts"),
+                forFile(diagnostics, "apps/notes-app/expo-env.d.ts"),
             ),
         ).toEqual([ "guard.generatedPath" ]);
-        expect(forFile(diagnostics, "apps/baby-sleep-tracker/src/app.tsx"))
+        expect(forFile(diagnostics, "apps/notes-app/src/app.tsx"))
             .toEqual([]);
     });
 
     test("results are ordered by path so two runs read the same", () => {
         const diagnostics = guardChange({
             profile: MULTI_CLONE,
-            currentOwner: "baby-sleep",
-            paths: [ "packages/ui/b.ts", "apps/detector/a.ts" ],
+            currentOwner: "notes",
+            paths: [ "packages/ui/b.ts", "apps/quiz/a.ts" ],
         });
         expect(diagnostics.map((d) => d.file)).toEqual([
-            "apps/detector/a.ts",
+            "apps/quiz/a.ts",
             "packages/ui/b.ts",
         ]);
     });
@@ -438,8 +438,8 @@ describe("asking about one write", () => {
         expect(
             writeIsAllowed(
                 MULTI_CLONE,
-                "baby-sleep",
-                "apps/baby-sleep-tracker/a.ts",
+                "notes",
+                "apps/notes-app/a.ts",
             )
                 .allowed,
         ).toBe(true);
@@ -448,7 +448,7 @@ describe("asking about one write", () => {
     test("another owner's explicit claim, refused with a reason", () => {
         const verdict = writeIsAllowed(
             MULTI_CLONE,
-            "baby-sleep",
+            "notes",
             "packages/ui/src/Button.tsx",
         );
         expect(verdict.allowed).toBe(false);
@@ -465,7 +465,7 @@ describe("asking about one write", () => {
      * because nobody claimed it, and every clone commits one after an install.
      */
     test("an unclaimed root file, allowed", () => {
-        expect(writeIsAllowed(MULTI_CLONE, "baby-sleep", "bun.lock").allowed)
+        expect(writeIsAllowed(MULTI_CLONE, "notes", "bun.lock").allowed)
             .toBe(true);
     });
 
@@ -476,7 +476,7 @@ describe("asking about one write", () => {
 
     test("an unresolved owner, refused", () => {
         expect(
-            writeIsAllowed(MULTI_CLONE, undefined, "apps/detector/a.ts")
+            writeIsAllowed(MULTI_CLONE, undefined, "apps/quiz/a.ts")
                 .allowed,
         ).toBe(false);
     });

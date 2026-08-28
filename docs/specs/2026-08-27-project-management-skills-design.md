@@ -12,7 +12,7 @@ A shared, agent-agnostic system that answers, near-deterministically, where each
 kind of project knowledge lives, what keeps it from going stale, and how an agent
 should behave when writing to any of it.
 
-Consumed by TheFloorr, Riskore, Vigilocity, BearingKind and future projects as a
+Consumed by four private repositories and future projects as a
 bun git dependency. Read by Claude Code, by Codex, and by humans.
 
 ## The problem
@@ -27,10 +27,11 @@ Five questions, currently answered differently in every repo:
 
 The evidence that these are unanswered rather than merely undocumented:
 
-- TheFloorr `docs/wiki/PRINCIPLES.md` section 3 requires concrete identifiers on
-  technical pages, including file paths. Riskore `CLAUDE.md` forbids file paths
-  and code examples in the wiki. Two live projects, opposite rules.
-- `docs/baby-sleep-tracker/README.md` opens by declaring its own status prose
+- The commerce repo's `docs/wiki/PRINCIPLES.md` requires concrete identifiers on
+  technical pages, including file paths. The business-wiki repo's `CLAUDE.md`
+  forbids file paths and code examples in the wiki. Two live projects, opposite
+  rules.
+- `docs/notes-app/README.md` opens by declaring its own status prose
   stale past Plan 8. A document claiming to describe the present, which stopped
   being maintained, with nothing marking the transition.
 - Five CLAUDE.md and AGENTS.md files repeat the same house rules nearly verbatim.
@@ -67,7 +68,7 @@ it independently. A roadmap row saying "Done 2026-08-24" is a projection of
 tracker state and is legal. A README paragraph narrating current status from
 memory is a second authority and is not.
 
-TheFloorr ships continuously and therefore has no roadmap. Baby-sleep is pre-1.0
+The commerce repo ships continuously and has no roadmap. The notes app is pre-1.0
 marching numbered milestones toward an App Store event and therefore has one.
 Absence of a roadmap is a valid configuration, not an omission.
 
@@ -154,7 +155,8 @@ Project-local: voice, which wiki profiles exist, section conventions, house
 rules, and every stack-specific convention.
 
 Configurable policy, one rule only: `wiki.path_citations`. It exists because
-TheFloorr and Riskore already hold opposite positions on file-path citations and
+the commerce repo and the business-wiki repo hold opposite positions on file-path
+citations and
 both are correct for their audience. It is a choice between two enforced
 policies, not an off switch, and adding a second entry to this list should be
 treated as evidence the rule itself is wrong.
@@ -165,8 +167,8 @@ One root profile per repo. Additional per-product profiles only in multi-product
 repos.
 
 **Resolution is by `paths` glob, not by directory ancestry.** A product owns
-disjoint subtrees: `baby-sleep-tracker` claims `apps/baby-sleep-tracker`,
-`packages/sleep-*` and `docs/baby-sleep-tracker` at once. Ancestor-based
+disjoint subtrees: `notes-app` claims `apps/notes-app`,
+`packages/notes-*` and `docs/notes-app` at once. Ancestor-based
 resolution, the way tsconfig and eslint work, cannot express that, because a file
 under `apps/` has no profile above it. So every profile in the repo is discovered
 by glob, a path-to-product index is built from their `paths` fields, and lookup
@@ -176,11 +178,12 @@ acting as the default product.
 **A root profile in a single-product repo carries the product fields directly**,
 with no separate product file: `docs`, `roadmap`, `mode` and `tracker.project`
 sit alongside `wiki` and `generated_paths`. The two-file split exists only to keep
-multi-product repos from contending on one file. TheFloorr, Riskore and this repo
-each have exactly one profile.
+multi-product repos from contending on one file. The commerce repo, the
+business-wiki repo and this repo each have exactly one profile.
 
 The profile file's own location is therefore free. It sits at the product's docs
-root because that keeps each BearingKind clone editing only files it owns, which
+root because that keeps each clone of the mobile monorepo editing only files it
+owns, which
 a single shared root file would not.
 
 Root profile:
@@ -203,7 +206,8 @@ Root profile:
 ### Owners are not products
 
 Ownership and product are two different axes, and collapsing them loses
-BearingKind's actual rule. A clone's **owner** scope says what may be written
+the mobile monorepo's actual rule. A clone's **owner** scope says what may be
+written
 here. A **product** says which docs, tracker project and mode apply. They are
 not the same partition: `packages/ui` is owned by `main/` but consumed by every
 product, and `main/` owns "everything not owned by another clone", which is a
@@ -216,24 +220,24 @@ So the root profile carries an `owners` block with an explicit default:
         paths: [packages/ui, apps/ui-showcase, web, docs/wiki, docs/specs, scripts]
         shared: true
         default: true          # claims everything unclaimed; at most one
-      baby-sleep:
-        paths: [apps/baby-sleep-tracker, "packages/sleep-*", docs/baby-sleep-tracker]
-      detector-game:
-        paths: [apps/detector, apps/game, "packages/{taxonomy,analysis,persistence}", docs/detector, docs/game]
-      relocant:
-        paths: [backend/relocant, docs/relocant]
+      notes:
+        paths: [apps/notes-app, "packages/notes-*", docs/notes-app]
+      quiz-arcade:
+        paths: [apps/quiz, apps/arcade, "packages/{taxonomy,analysis,persistence}", docs/quiz, docs/arcade]
+      portal:
+        paths: [backend/portal, docs/portal]
 
 **Precedence.** Explicit owner globs match first. Overlaps between two explicit
 owners are a schema error. The `default: true` owner claims only what no explicit
 owner matched, and at most one owner may declare it.
 
-**Identifying the current owner cannot use git.** All four BearingKind clones
-share one origin URL (`github.com/kuindji/bearingkind.git`), so the remote
+**Identifying the current owner cannot use git.** All four clones of the mobile
+monorepo share one origin URL, so the remote
 carries no owner signal. Resolution is, in order: a gitignored `.agent-owner`
 file at the clone root; then the basename of the clone's main working tree,
 found via `git rev-parse --git-common-dir`, which also resolves correctly from a
 worktree under `.worktrees/`; then error. The basename fallback is exactly the
-convention BearingKind's AGENTS.md already documents, and the common-dir lookup
+convention that repo's AGENTS.md already documents, and the common-dir lookup
 is what makes its "derive your scope from the clone the worktree was created
 from" rule mechanical.
 
@@ -241,18 +245,18 @@ from" rule mechanical.
 Single-clone repos omit the block entirely.
 
 A change touching a `shared: true` owner additionally requires a consumer
-blast-radius check, which is the rule BearingKind's AGENTS.md states in prose.
+blast-radius check, which is the rule that repo's AGENTS.md states in prose.
 
 Per-product profile, at the product's docs root:
 
-    product: baby-sleep-tracker
-    paths: [apps/baby-sleep-tracker, "packages/sleep-*"]
+    product: notes-app
+    paths: [apps/notes-app, "packages/notes-*"]
     roadmap: ./milestones.md
-    tracker.project: baby-sleep-tracker
+    tracker.project: notes-app
     mode:
       default: greenfield
       overrides:
-        packages/sleep-domain: mature
+        packages/notes-domain: mature
     docs:
       root: .
       lifecycle: ["specs/*.md", "plans/*.md"]
@@ -267,15 +271,16 @@ Per-product profile, at the product's docs root:
 
 Shapes per project:
 
-- TheFloorr: root profile only. Dual wiki profiles, ClickUp, no roadmap, mature.
-- Riskore: root profile only. `profiles: [business]`, no roadmap.
-- BearingKind: root profile plus four product profiles.
+- The commerce repo: root profile only. Dual wiki profiles, ClickUp, no roadmap,
+  mature.
+- The business-wiki repo: root profile only. `profiles: [business]`, no roadmap.
+- The mobile monorepo: root profile plus four product profiles.
 
 ### Profile-derived checks
 
 - `roadmap` is optional, and at most one per product.
 - `paths` globs must not overlap across products. No file belongs to two.
-- The generated union of every product's `paths` replaces BearingKind's
+- The generated union of every product's `paths` replaces the mobile monorepo's
   hand-maintained clone ownership table in AGENTS.md, and a diff writing outside
   the current clone's scope becomes a validator failure rather than a paragraph
   an agent has to remember.
@@ -287,11 +292,11 @@ Shapes per project:
 Fires when creating or editing a wiki page, and in mature mode when finishing a
 feature.
 
-Carried over from TheFloorr and enforced: frontmatter contract (`title`,
+Carried over from the commerce repo and enforced: frontmatter contract (`title`,
 `parents`, `children`, `related_pages`, `last_updated`); bidirectional
 parents and children; symmetric `related_pages`; reachability from README; size
-budget, warning above 700 words of body and erroring above 1,000, carried over
-from TheFloorr; business-subtree self-containment when
+budget, warning above 700 words of body and erroring above 1,000, also carried
+over; business-subtree self-containment when
 `business_subtree` is declared; the split rule when a page outgrows its budget.
 
 New and enforced, the **names versus positions** rule:
@@ -306,8 +311,9 @@ edit and is not greppable once wrong: line numbers, line ranges, and directory
 trees.
 
 Measured against the real corpora, the earlier formulation was wrong in three
-ways. TheFloorr's wiki uses `rate(1 minute)` and `now()`, which are EventBridge
-and Postgres contracts, not code locations. BearingKind's UI wiki cannot describe
+ways. The commerce wiki uses `rate(1 minute)` and `now()`, which are EventBridge
+and Postgres contracts, not code locations. The mobile monorepo's UI wiki cannot
+describe
 the shared component contract without `useToast()` and `createAlertController()`,
 which are the most stable names in that codebase. And 4 of its 10 pages use code
 fences to show contract shapes. A ban on call syntax or fenced blocks would
@@ -327,9 +333,9 @@ out of the validator and into the housekeeping unslop pass, where a stylistic
 preference belongs.
 
 `wiki.path_citations` is the one rule whose policy a project sets, because the
-evidence shows projects legitimately differ: TheFloorr built a deliberate
-parenthetical citation convention across 77 pages, and Riskore bans paths
-outright. It takes `forbidden` (Riskore) or `citation` (TheFloorr).
+evidence shows projects legitimately differ: the commerce repo built a deliberate
+parenthetical citation convention across 77 pages, and the business-wiki repo
+bans paths outright. It takes `forbidden` or `citation`.
 
 There is deliberately no `off`. A severity dial invites silencing the rule; a
 policy choice does not. Under either setting the validator **always reports the
@@ -338,7 +344,8 @@ where the practice is sanctioned. This is a narrow exception to "validator-backe
 rules are fixed", made because two of your projects already disagree and both are
 right for their audience.
 
-Measured cost at TheFloorr: 19 pages and 193 occurrences carry line numbers. The
+Measured cost in the commerce wiki: 19 pages and 193 occurrences carry line
+numbers. The
 earlier blanket rule would have hit 100 of 150 pages.
 
 The business profile keeps its existing constraints: plain language, no internal
@@ -350,7 +357,7 @@ Fires when writing a spec, plan, research note or handover, and when one ships.
 
 **Doc classes, not docs roots.** The lifecycle applies to declared globs, never
 to everything under a docs root. Measured: 125 files under
-`docs/baby-sleep-tracker` are not date-named, and nearly all are legitimately
+`docs/notes-app` are not date-named, and nearly all are legitimately
 permanent (research reports, privacy policies, branding SVGs, device checklists,
 repro fixtures). A blanket naming rule would have made every one of them a
 violation, which is how a validator gets switched off.
@@ -365,7 +372,7 @@ violation, which is how a validator gets switched off.
 | `assets`                                | free                  | not validated            | no        |
 
 **Every file under a docs root must match exactly one class.** No match is an
-error, not a silent pass. Otherwise a stray `docs/baby-sleep-tracker/2026-08-27-sync-plan.md`
+error, not a silent pass. Otherwise a stray `docs/notes-app/2026-08-27-sync-plan.md`
 landing outside `specs/` and `plans/` escapes naming, lifecycle and the fold gate
 entirely, which is the failure the class system exists to prevent. Deliberate
 exclusions go in `ignored`, where they are visible.
@@ -394,13 +401,13 @@ the body after frontmatter means metadata and link maintenance stay legal while
 the substance stays frozen. A material body edit requires either `supersedes`
 pointing at a newer doc, or an explicit `reopened_reason`.
 
-The lifecycle exists because docs are only frozen once shipped. Baby-sleep's plan
+The lifecycle exists because docs are only frozen once shipped. The notes app's plan
 files carry live implementation-progress sections for weeks, which is correct
 while the work is open and wrong the moment it closes. Nothing currently marks
 that transition, and the transition is the only moment folding into the wiki
 reliably happens.
 
-The baby-sleep README is a `live` doc, not a `lifecycle` one, so the `active`
+The notes README is a `live` doc, not a `lifecycle` one, so the `active`
 staleness flag would never have touched it. That is why `live` carries its own
 `review_after_days`. A `live` doc claims to be perpetually current, which makes
 an unreviewed one strictly more dangerous than a stale plan, not less. No prose
@@ -422,12 +429,13 @@ Protocol:
 - Issue state lives in the tracker and nowhere else.
 - Done requires tracker state plus evidence. Code existing is not done. Where the
   product declares `checklists` globs, evidence means the named rows ticked, which
-  generalizes the rule in baby-sleep `milestones.md`. Where it declares none, as
-  TheFloorr does for routine continuous delivery, evidence means the command and
+  generalizes the rule in notes `milestones.md`. Where it declares none, as
+  the commerce repo does for routine continuous delivery, evidence means the
+  command and
   its output in the finish note. The obligation is constant; its form follows the
   profile.
 - Ticket title and description readable by someone new to the project. This
-  generalizes TheFloorr's existing ClickUp rule.
+  generalizes the commerce repo's existing ClickUp rule.
 
 ### When the tracker is a file
 
@@ -493,7 +501,7 @@ Sweep, in order:
    This **orders review; it does not claim coverage.** It works well for a page
    whose subject has a unique greppable name and badly for one whose subject is
    a convention, a legal position, or a flow distributed across many files.
-   "Describe, never diagnose" is a real rule in baby-sleep with no symbol to
+   "Describe, never diagnose" is a real rule in notes with no symbol to
    grep. Declared `watch_paths` is the escape hatch for exactly those pages, and
    an undeclared page that has not been reviewed in a long time is surfaced on
    age alone.
@@ -532,17 +540,17 @@ first line.
 | done means       | acceptance evidence           | shipped, wiki updated, no regression  |
 | tracker          | may be in-repo                | external, ticket per change           |
 
-Mode is per-path rather than per-project, so a greenfield subsystem inside
-TheFloorr does not inherit mature ceremony, and a hardened package inside
-baby-sleep does not lose it.
+Mode is per-path rather than per-project, so a greenfield subsystem inside a
+mature repo does not inherit mature ceremony, and a hardened package inside
+notes does not lose it.
 
 **Mixed-mode changes resolve strictest-per-path.** A change touching greenfield
-app code and a mature `packages/sleep-domain` does not pick one mode. Each
+app code and a mature `packages/notes-domain` does not pick one mode. Each
 touched path keeps its own gates: the mature package needs its wiki page updated
 in the same commit and a consumer blast-radius check; the greenfield app defers
 its wiki to the milestone boundary. Where that produces two different definitions of done in one commit, split the
 change **only if the parts are independently valid**. They often are not: a
-`packages/sleep-domain` change to an exported type and the app update that
+`packages/notes-domain` change to an exported type and the app update that
 follows it must land together or both commits fail CI. For an atomic
 cross-mode change, keep one commit and apply the strictest gates at commit level:
 the mature path's wiki update, a consumer blast-radius check, and evidence for
@@ -605,17 +613,17 @@ while:
 Verification does not wait for a consuming project. This repo already has the
 shape every validator needs to exercise:
 
-| Under test                                 | Fixture here                           |
-| ------------------------------------------ | -------------------------------------- |
-| profile schema, single-product root form   | `project-profile.yaml`                 |
-| `lifecycle` doc class, naming, frontmatter | `docs/specs/`                          |
-| `live` doc class, review age               | `README.md`                            |
-| declared-but-empty wiki                    | `docs/wiki/`                           |
-| no-class-match is an error                 | any stray file under `docs/`           |
-| `path_citations: forbidden`                | this repo's own setting                |
-| in-repo tracker class                      | `docs/tasks.md`                        |
-| multi-product, owners, roadmap             | checked-in BearingKind profile fixture |
-| dual wiki profiles, external tracker       | checked-in TheFloorr profile fixture   |
+| Under test                                 | Fixture here                     |
+| ------------------------------------------ | -------------------------------- |
+| profile schema, single-product root form   | `project-profile.yaml`           |
+| `lifecycle` doc class, naming, frontmatter | `docs/specs/`                    |
+| `live` doc class, review age               | `README.md`                      |
+| declared-but-empty wiki                    | `docs/wiki/`                     |
+| no-class-match is an error                 | any stray file under `docs/`     |
+| `path_citations: forbidden`                | this repo's own setting          |
+| in-repo tracker class                      | `docs/tasks.md`                  |
+| multi-product, owners, roadmap             | `multi-product/` profile fixture |
+| dual wiki profiles, external tracker       | mature single-product fixture    |
 
 `project-validate` exiting 0 against this repo is the acceptance gate for the
 whole build, and no other repo is touched until it is met. Writing `docs/wiki/` for real is part of it: the wiki that describes
@@ -656,23 +664,25 @@ which is the failure Codex's round-1 review predicted when the original plan put
 the hardest repo last.
 
 The mitigation keeps the constraint intact: **the hard shapes arrive as
-fixtures, not as adoption.** Profiles for BearingKind (four products, an owners
-block with a complement default, per-product roadmaps, shared packages) and
-TheFloorr (dual wiki profiles, external tracker, no roadmap, mature mode) are
+fixtures, not as adoption.** Profiles for the mobile monorepo (four products, an
+owners block with a complement default, per-product roadmaps, shared packages)
+and the commerce repo (dual wiki profiles, external tracker, no roadmap, mature
+mode) are
 written into this repo's test corpus and validated there. Nothing is installed
 into those repos and nothing in them is modified. The schema gets its coverage;
 the constraint holds.
 
 Once the gate is met, the test sessions run in this order:
 
-1. **Riskore.** Smallest real subject. Single product, business-only wiki, no
-   roadmap. First repo actually brought into compliance.
-2. **TheFloorr.** The wiki-validator's real trial: 150 pages, dual profiles,
-   ClickUp, mature mode, and the 19-page line-number worklist.
-3. **BearingKind.** Clone ownership, four products, roadmaps, checklists. Its
-   profile fixture will already have been passing for some time by then.
+1. **The business-wiki repo.** Smallest real subject. Single product,
+   business-only wiki, no roadmap. First repo actually brought into compliance.
+2. **The commerce repo.** The wiki-validator's real trial: 150 pages, dual
+   profiles, ClickUp, mature mode, and the 19-page line-number worklist.
+3. **The mobile monorepo.** Clone ownership, four products, roadmaps,
+   checklists. Its profile fixture will already have been passing for some
+   time by then.
 
-Vigilocity follows once the schema has survived all three.
+The fourth project follows once the schema has survived all three.
 
 ## Deferred
 
@@ -681,7 +691,8 @@ Vigilocity follows once the schema has survived all three.
   names from `serverless.yml`, table names from migrations, workspace names from
   `package.json`).
 - Rule policy is configurable for exactly one rule, `wiki.path_citations`,
-  because TheFloorr and Riskore already disagree and both are correct for their
+  because the commerce repo and the business-wiki repo disagree and both are
+  correct for their
   audience. No general waiver mechanism and no off switch. If another fixed rule proves wrong for a
   project, the rule changes rather than gaining an escape hatch.
 - `docs.stale_after_days` is a threshold, not a waiver; a project may tune it.

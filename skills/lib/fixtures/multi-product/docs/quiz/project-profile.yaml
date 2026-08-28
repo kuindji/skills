@@ -1,10 +1,10 @@
-product: detector
-paths: [apps/detector, apps/game]
+product: quiz
+paths: [apps/quiz, apps/arcade]
 
 mode:
   default: greenfield
 
 docs:
-  root: docs/detector
+  root: docs/quiz
   lifecycle: ["specs/*.md", "plans/*.md"]
   live: ["README.md"]

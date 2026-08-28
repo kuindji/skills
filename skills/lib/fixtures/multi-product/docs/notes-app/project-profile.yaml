@@ -1,19 +1,19 @@
-product: baby-sleep-tracker
-paths: [apps/baby-sleep-tracker, "packages/sleep-*"]
+product: notes-app
+paths: [apps/notes-app, "packages/notes-*"]
 
 # Pre-1.0, marching numbered milestones toward an App Store event.
-roadmap: docs/baby-sleep-tracker/milestones.md
+roadmap: docs/notes-app/milestones.md
 
 tracker:
-  project: baby-sleep-tracker
+  project: notes-app
 
 mode:
   default: greenfield
   overrides:
-    packages/sleep-domain: mature
+    packages/notes-domain: mature
 
 docs:
-  root: docs/baby-sleep-tracker
+  root: docs/notes-app
   lifecycle: ["specs/*.md", "plans/*.md"]
   live: ["README.md", "milestones.md"]
   checklists: ["*-checklist.md", "legal-and-compliance/launch-checklist.md"]

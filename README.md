@@ -1,8 +1,9 @@
 # @kuindji/project-skills
 
 Shared project-management rules for agents, consumed as a bun git dependency by
-TheFloorr, Riskore, Vigilocity and BearingKind. Readable by Claude Code, by
-Codex, and by people.
+a handful of private repositories: a mature commerce monorepo, a four-product
+mobile monorepo, and two smaller single-product repos. Readable by Claude Code,
+by Codex, and by people.
 
 It answers one question in five places: **what is the decay rate of this
 sentence, and what invalidates it.** Wiki, docs, tracker, checklists and code

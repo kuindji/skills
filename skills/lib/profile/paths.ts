@@ -10,8 +10,8 @@
  * hand, and the natural way to claim a directory is to name it: `packages/ui`
  * means the package, not the one file whose path is exactly that. So a claim
  * matches when the pattern names the path, contains it, glob-matches it, or
- * glob-matches the leading segments of it, which is what lets `packages/sleep-*`
- * cover `packages/sleep-domain/src/index.ts`.
+ * glob-matches the leading segments of it, which is what lets `packages/notes-*`
+ * cover `packages/notes-domain/src/index.ts`.
  */
 export function claims(pattern: string, path: string): boolean {
     // A trailing slash is the natural way to write a directory and would
@@ -33,7 +33,7 @@ export function claims(pattern: string, path: string): boolean {
         return true;
     }
     // A glob naming a directory should claim what is inside it, so
-    // `packages/sleep-*` covers `packages/sleep-domain/src/index.ts`.
+    // `packages/notes-*` covers `packages/notes-domain/src/index.ts`.
     const head = target.split("/").slice(0, claim.split("/").length).join("/");
     return glob.match(head);
 }
