@@ -166,10 +166,27 @@ function prose(scan: DriftScan, limit: number): string[] {
         `${plural(scan.pages, "page")} read, `
             + `${plural(scan.searched, "file")} searched.`,
     );
+    // A quiet page that reached no file was never traced. It is quiet only
+    // because it is younger than the age threshold, and the same page past
+    // that threshold is queued as untraceable, so counting it as traced
+    // overstates coverage in exactly the window where the page is new and the
+    // summary is believed.
+    const untraced = scan.quiet.filter((e) => e.watched.length === 0).length;
+    const traced = scan.quiet.length - untraced;
     lines.push(
         `${plural(scan.queued.length, "page")} queued, `
-            + `${plural(scan.quiet.length, "page")} traced and unchanged.`,
+            + `${plural(traced, "page")} traced and unchanged`
+            + (untraced === 0
+                ? "."
+                : `, ${plural(untraced, "page")} untraced.`),
     );
+    if (untraced > 0) {
+        lines.push(
+            "An untraced page carries no name that reaches a file here. Below "
+                + "the age threshold it is neither traced nor surfaced, so "
+                + "nothing on it has been checked against anything.",
+        );
+    }
     if (scan.pages > 0 && scan.searched === 0) {
         // Otherwise this run is indistinguishable from a traced one that found
         // no churn, and the difference is the entire meaning of the output.

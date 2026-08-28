@@ -6,8 +6,9 @@ related_pages: []
 last_updated: 2026-08-28
 ---
 
-Nothing here goes to a registry. A consuming repository takes this package as a
-bun development dependency by git URL, pinned to a tag, so an upgrade is an
+Nothing here goes to a registry. A consuming repository takes
+`@kuindji/project-skills` as a bun development dependency by git URL, pinned to
+a tag, so an upgrade is an
 edit somebody made rather than whatever the default branch held on the morning
 they installed. The manifest ships the source root alone, so what arrives is
 the four skills, the doctrine they link into, the templates, the library and
@@ -26,10 +27,11 @@ contract in [[skills]] is checked by this package's own tests and not by a bin:
 a consumer has nothing local for a bin to read.
 
 The seven bins in [[validators]] are declared in the manifest, so a consumer's
-package runner puts each of them on the path under its own name. Inside this
-repository they are not on the path, because a package is not a dependency of
-itself. Every command in every skill is written in both forms for that reason,
-and the second form is the one this repository runs.
+package runner puts each of them on the path under its own name and
+`project-validate` is a word somebody can type. Inside this repository they are
+not on the path, because a package is not a dependency of itself. Every command
+in every skill is written in both forms for that reason, and the second form is
+the one this repository runs.
 
 ## Copied
 
@@ -38,7 +40,10 @@ profile, a product profile where a repository holds more than one product, the
 tracker where task state lives in the repository rather than on a board, the
 house rules, the wiki principles, and the block that goes into the repository's
 agent instructions. Each opens with a header saying where it goes and what to
-edit.
+edit. `TEMPLATE_PATH` is where the root profile is copied from, written as the
+dependency path a consuming repository sees rather than as a path inside this
+one, and a test keeps it pointing at a file that ships: it is the one string
+here that a repository with no profile at all is told to go and read.
 
 A copied file is never updated from here again. That is the trade, and it is
 the same line the doctrine draws between what is fixed and what a project owns:
@@ -60,8 +65,9 @@ reader opened.
 
 ## What adoption is finished by
 
-One profile, at minimum, and the umbrella exiting zero over the repository.
-Until a profile exists nothing runs at all, and every rule below it is read out
+One profile, at minimum, and `project-validate` exiting zero over the
+repository. `profile-validate` is the narrower first run, because until a
+profile parses nothing else has anything to read: every rule below it comes out
 of that file rather than out of a default.
 
 This repository is its own first consumer, so the templates are exercised the

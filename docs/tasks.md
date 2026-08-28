@@ -6,17 +6,16 @@ file carries it. A task moves to Done only with an `evidence:` line naming the
 command that proves it.
 
 Ids are `<stage><n>`, stages following the build order in the design spec,
-then `A` for the adoption order that spec ends with.
+then `A` for the adoption order that spec ends with and `H` for the
+housekeeping sweeps and what they turn up.
 
 ## Todo
-
-- [ ] `P5-02` Acceptance: `project-validate` exits 0 on this repo
 
 - [ ] `A-01` Adopt in the business-wiki repo
       The smallest real subject: one product, a business-only wiki, no roadmap.
       The first repository brought into compliance, and the first reading of
-      the templates by a repository that did not write them. Waits on `P5-02`,
-      which is the gate the design spec puts in front of every row below.
+      the templates by a repository that did not write them. `P5-02` is met, so
+      the gate the design spec put in front of every row below is open.
 
 - [ ] `A-02` Adopt in the commerce repo
       The wiki validator's real trial: 150 pages, two wiki profiles, an
@@ -36,6 +35,127 @@ then `A` for the adoption order that spec ends with.
 ## Blocked
 
 ## Done
+
+- [x] `H-04` The front door narrated status it does not own
+      evidence: `bun run validate` — no problems, exit 0; `bun run
+      skills/bin/docs-validate.ts` — 5 documents, the front door among them,
+      classified `live` and inside its review age.
+      The README opened with a status paragraph saying the wiki was still to
+      come and was the acceptance gate, and the layout table said the wiki root
+      was empty until milestone 1. Both were true when written and false the
+      moment `P5-01` landed. Neither was reachable by any validator: a `live`
+      document is aged by its last commit, and this one was committed the same
+      day it went wrong.
+      The paragraph is gone rather than corrected. Whether a piece of work is
+      finished is the tracker's answer, and a README that repeats it is a
+      second authority that nothing keeps in step, which the doctrine says
+      plainly and which this repository was doing on its own front page. What
+      replaces it points at the spec and at the tracker and says why it will
+      not narrate either.
+      Found while closing `P5-02` rather than by the sweep that should have
+      caught it. `H-01` ran the docs step as written and the step asks about
+      stale `active` documents and unfolded `shipped` ones, not about whether a
+      `live` document is still true. That gap is real and is the reason
+      `review_after_days` exists, but 90 days is the wrong clock for a status
+      line that goes false in a day.
+      folded into: nothing. The front door is not a wiki page and the wiki
+      already says what the package is.
+      follow-up: none. The temptation is a validator that reads a README for
+      status prose, and it would be a grep for "status" with no decay argument
+      behind it.
+
+- [x] `P5-02` Acceptance: `project-validate` exits 0 on this repo
+      evidence: `bun run validate` — no problems over 12 pages and 5 documents,
+      exit 0; `bun test` — 600 pass, 0 fail; `bun run type-check` clean. The
+      wider half of the gate, that all four skills have been exercised here,
+      has a task behind each one: `wiki-authoring` in `P5-01` and `H-03`,
+      `project-docs` in `P5-03`, `task-tracking` in every entry in this file,
+      and `housekeeping` in `H-01`.
+      The gate is met, so the adoption order opens and `A-01` is next. Nothing
+      outside this repository has been read or touched to get here, which was
+      the constraint the design spec put on the whole build: the hard shapes
+      arrived as fixtures instead.
+      What the gate was worth is measurable now that it is met. Running the
+      rules against the repository that wrote them turned up three faults no
+      unit test had: two stale tests in `P5-01` that asserted properties of a
+      directory rather than of a rule, and a reporting fault in `H-02` that
+      overstated coverage in the one window where a reader believes it. None of
+      them would have surfaced against a fixture.
+      folded into: nothing new. `P5-03` folded the design spec that describes
+      this gate, and the wiki page on testing already holds why the repository
+      is its own first subject.
+      follow-up: none beyond `A-01` to `A-04`, already filed.
+
+- [x] `H-03` The `adoption` page carries no names
+      evidence: `bun run skills/bin/wiki-drift.ts --json` — the page goes from
+      0 names to 3 names reaching 20 files, and the run now traces 11 of 12
+      pages; `bun run skills/bin/wiki-validate.ts` — no problems, 0 path
+      references across 12 pages, and the page is 658 words against a 700-word
+      warning.
+      It names the package, the constant that carries where the root profile
+      template is copied from, and the two bins a consuming repository types
+      first. All three are names rather than positions, which is the only
+      reason they can be traced at all: the page is about a consumption
+      contract, and the temptation was to cite the files that hold it.
+      `README` stays at 0 names on purpose. An index names its children and
+      nothing else, so it is the honest case for a page surfaced on age alone,
+      and `H-02` is what makes that visible instead of counting it as traced.
+      folded into: `adoption`, which is the page itself.
+
+- [x] `H-02` `wiki-drift` counts a page it never traced as traced
+      evidence: the test named "a page nothing could be traced on is not
+      counted as traced" in the `wiki-drift` CLI suite, written first and
+      verified red against the old renderer, which printed `0 pages queued, 2
+      pages traced and unchanged` for two pages nothing had been traced on;
+      `bun test` — 600 pass, 0 fail; `bun run skills/bin/wiki-drift.ts` over
+      this repository now reports `11 pages traced and unchanged, 1 page
+      untraced` where it reported 12 traced before.
+      The run always knew the difference and only the prose form hid it, so the
+      fix is a split count and one line saying what an untraced page is. The
+      reason enum is unchanged: past the age threshold the same page is already
+      queued as untraceable, and a fourth reason would have been a second name
+      for a state that exists.
+      folded into: `drift`. The page said the run does one of two things for
+      every page, which was true of an old page and not of a new one, so the
+      third case is now written down: neither traced nor surfaced, and counted
+      apart from the traced pages.
+
+- [x] `H-01` The first housekeeping sweep
+      evidence: `bun run skills/bin/project-validate.ts` — no problems over 12
+      pages and 5 documents, exit 0; `bun run skills/bin/wiki-drift.ts` — 12
+      pages read, 114 files searched, 0 queued; `bun run
+      skills/bin/docs-validate.ts` — no problems, exit 0. Coverage step run by
+      hand: 86 exported names against the wiki, 7 bins, 4 skills, 6 templates.
+      Nothing was fixed, because nothing mechanical was broken. The two
+      findings are both proposals, filed as `H-02` and `H-03`.
+      The worklist is empty and that is not a claim about the wiki. Every page
+      carries a date inside the last two days, so churn has nothing to measure
+      against and the first sweep of any wiki is structurally quiet. What the
+      run did surface is the shape of the corpus: two pages extract no names at
+      all, `README` and `adoption`, and `testing` extracts one. `README` is an
+      index and correctly names nothing, which is the honest case for a page
+      that is surfaced on age alone. `adoption` is `H-03`.
+      The finding worth the sweep is `H-02`, and it came out of reading the
+      summary against the JSON rather than out of any page. The tool prints
+      the two zero-name pages inside "12 pages traced and unchanged", which is
+      the exact confusion its own doctrine warns about: a reader who takes a
+      heuristic for a proof. It is a reporting fault, not a rule fault, so it
+      is code and it is filed rather than fixed here.
+      Coverage gaps, as candidates and not filled. The frontmatter parser has
+      no page: every layer in this system reads frontmatter and both skills
+      document what the parser refuses, a flow collection split over lines, a
+      tab, a duplicate key, but no page names it. The bin shell has none
+      either: the wiki gives the contract every bin shares and not the
+      mechanism, so nothing describes how a diagnostic is rendered or why the
+      injected console is what makes a bin testable end to end. Smaller: the
+      package's own name appears on no page in its own wiki.
+      Steps that did nothing, said plainly. Step 3 reread nothing because the
+      worklist was empty. Step 6 touched no page, because the unslop pass runs
+      over what the sweep opened and the sweep opened none. Step 5 found no
+      stale active document, which is true today only because `P5-03` shipped
+      the one lifecycle document this repository has.
+      folded into: nothing. A sweep that folds is a sweep that rewrote.
+      follow-up: `H-02` and `H-03` filed.
 
 - [x] `P5-03` Ship the design spec: `folded_into`, then `docs-freeze`
       evidence: `bun run skills/bin/docs-freeze.ts

@@ -296,6 +296,37 @@ describe("the worklist", () => {
         );
     });
 
+    /**
+     * A page whose names reach no file was not traced, and the summary counted
+     * it as though it had been. It is quiet only because it is younger than
+     * the age threshold: the same page a fortnight later is reported
+     * untraceable. So the window where the count is wrong is the window where
+     * somebody has just written the page and is most likely to believe it.
+     */
+    test("a page nothing could be traced on is not counted as traced", async () => {
+        const today = new Date().toISOString().slice(0, 10);
+        await withRepo(
+            {
+                ...DRIFTED,
+                "docs/wiki/README.md": page(
+                    today,
+                    "The index. See [[orders]].",
+                ),
+                "docs/wiki/orders.md": page(
+                    today,
+                    "Describe the mechanism, never the position.",
+                ),
+            },
+            async (directory) => {
+                const { io, text } = sink();
+                expect(await wikiDrift([ "--repo", directory ], io))
+                    .toBe(EXIT.ok);
+                expect(text()).toContain("2 pages untraced");
+                expect(text()).not.toContain("2 pages traced and unchanged");
+            },
+        );
+    });
+
     test("--limit refuses a value that is not a count", async () => {
         await withRepo(DRIFTED, async (directory) => {
             const { io, text } = sink();

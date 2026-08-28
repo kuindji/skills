@@ -31,6 +31,13 @@ legal position, it is surfaced on age instead, against `DEFAULT_AGE_DAYS`.
 Ordering by age is the worse answer of the two and the run says so, because a
 heuristic a reader mistakes for a proof is worse than no heuristic.
 
+A page with nothing greppable that is younger than `DEFAULT_AGE_DAYS` is a
+third case rather than a variant of the second. It is neither traced nor
+surfaced, so nothing about it has been checked against anything, and the
+summary counts it apart from the traced pages instead of inside them. That
+window is the one where the page was just written and the count is most
+readily believed.
+
 The other half of the sweep, diffing the names a repository has against the
 names its wiki never mentions, stays manual. Enumerating them well means
 knowing where a given repository keeps its service names, its table names and

@@ -9,11 +9,12 @@ It answers one question in five places: **what is the decay rate of this
 sentence, and what invalidates it.** Wiki, docs, tracker, checklists and code
 each have a different answer, and every rule here derives from one of them.
 
-Status: the validators run, all four skills are written, and the templates a
-project copies out of here ship. This repo's own wiki is still to come, and it
-is the acceptance gate. The design is in
-[`docs/specs/2026-08-27-project-management-skills-design.md`](docs/specs/2026-08-27-project-management-skills-design.md)
-and the work is tracked in [`docs/tasks.md`](docs/tasks.md).
+The design that decided all of it is in
+[`docs/specs/2026-08-27-project-management-skills-design.md`](docs/specs/2026-08-27-project-management-skills-design.md),
+shipped and frozen at its date. What is intended and what is finished is in
+[`docs/tasks.md`](docs/tasks.md), which is the tracker and the only place
+either question is answered. This file does not narrate progress: a second
+answer here would be believed by whoever read it first.
 
 ## Validators
 
@@ -46,14 +47,14 @@ reason `docs-freeze` and `guard-generated` do.
 for what it holds, because here the skills are the product. `docs/` is
 information about that product.
 
-| Path                         | Holds                                                 |
-| ---------------------------- | ----------------------------------------------------- |
-| `skills/doctrine.md`         | The rules every skill links to instead of restating.  |
-| `skills/<name>/SKILL.md`     | A skill. The `SKILL.md` is what makes it one.         |
-| `skills/templates/`          | Files copied into a consuming repo, then owned there. |
-| `skills/lib/`, `skills/bin/` | Implementation and entry points.                      |
-| `docs/specs/`                | Dated design documents. Frozen once shipped.          |
-| `docs/wiki/`                 | How the system works now. Empty until milestone 1.    |
+| Path                         | Holds                                                  |
+| ---------------------------- | ------------------------------------------------------ |
+| `skills/doctrine.md`         | The rules every skill links to instead of restating.   |
+| `skills/<name>/SKILL.md`     | A skill. The `SKILL.md` is what makes it one.          |
+| `skills/templates/`          | Files copied into a consuming repo, then owned there.  |
+| `skills/lib/`, `skills/bin/` | Implementation and entry points.                       |
+| `docs/specs/`                | Dated design documents. Frozen once shipped.           |
+| `docs/wiki/`                 | How the system works now, and how a project adopts it. |
 
 ## Adopting it
 
