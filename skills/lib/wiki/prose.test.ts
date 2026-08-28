@@ -38,6 +38,23 @@ describe("line numbers", () => {
         ]);
     });
 
+    // A list of lines is one citation. Naming only its first number leaves the
+    // rest of the list behind when the remedy is applied to what was named,
+    // and `awsConfig.ts,41` is not a citation any rule then catches.
+    test("a list of lines is named whole", () => {
+        const found = check("See `src/wiki.ts:101,140-146` for the parser.\n");
+        expect(found.diagnostics).toHaveLength(1);
+        expect(found.diagnostics[0]!.message).toContain(
+            "`src/wiki.ts:101,140-146`",
+        );
+    });
+
+    test("a sentence's own comma is not part of the citation", () => {
+        const found = check("`src/wiki.ts:101`, 40 lines above the parser.\n");
+        expect(found.diagnostics[0]!.message).toContain("`src/wiki.ts:101`");
+        expect(found.diagnostics[0]!.message).not.toContain("40");
+    });
+
     test("the citation is reported once, not also as a path", () => {
         expect(rules("`src/wiki.ts:101`\n", "forbidden")).toEqual([
             "wiki.lineNumber",

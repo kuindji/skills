@@ -110,9 +110,16 @@ const TLD_LIKE_RE = /\.(?:sh|go)$/;
 const PATH_SOURCE = String
     .raw`(?<![\w/.-])(?:[\w@.-]+\/)*[\w@.-]+\.(?:${CODE_EXTENSIONS})\b(?!\.[A-Za-z]{2,})`;
 
-/** `src/wiki.ts:101` and `src/wiki.ts:101-110`. */
+/** `src/wiki.ts:101`, `src/wiki.ts:101-110` and `src/wiki.ts:101,140-146`. */
+// A comma list is one citation and has to match whole. Matching only its first
+// number names half the string in the diagnostic, and the remedy applied to
+// what was named leaves `src/wiki.ts,140-146` behind, which carries no colon
+// and so is not a citation any rule catches afterwards. The list items take no
+// space around the comma, so a sentence reading `app.ts:12`, 40 lines later
+// keeps its own comma.
+const LINE_RANGE = String.raw`\d+(?:\s*[-–]\s*\d+)?`;
 const LINE_REF_RE = new RegExp(
-    `${PATH_SOURCE}:\\d+(?:\\s*[-–]\\s*\\d+)?`,
+    `${PATH_SOURCE}:${LINE_RANGE}(?:,${LINE_RANGE})*`,
     "g",
 );
 const PATH_RE = new RegExp(PATH_SOURCE, "g");
