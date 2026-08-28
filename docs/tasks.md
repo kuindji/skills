@@ -9,11 +9,14 @@ Ids are `<stage><n>`, stages following the build order in the design spec.
 
 ## Todo
 
-- [ ] `P3-02` `wiki-authoring` SKILL.md
 - [ ] `P3-03` `project-docs` SKILL.md
 - [ ] `P3-04` `task-tracking` SKILL.md
 - [ ] `P3-05` Templates
 - [ ] `P4-01` `housekeeping` SKILL.md and the sweep
+      note: the spec's drift worklist has pages declaring `watch_paths` in
+      frontmatter, and the wiki frontmatter contract is closed at five keys, so
+      that escape hatch does not exist as written. Decide it there rather than
+      widening the contract by accident.
 - [ ] `P5-01` Write this repo's `docs/wiki/`
 - [ ] `P5-02` Acceptance: `project-validate` exits 0 on this repo
 
@@ -23,6 +26,45 @@ Ids are `<stage><n>`, stages following the build order in the design spec.
 
 ## Done
 
+- [x] `P3-02` `wiki-authoring` SKILL.md
+      evidence: bun test — 500 pass, 31 of them new and every one written to
+      fail first; `bun run skills/bin/project-validate.ts` still exits 0 here.
+      The first skill, and the contract that keeps a SKILL.md honest, which is
+      a test rather than a bin because a consuming repository has no `skills/`
+      directory to check. Written against the validators rather than the spec,
+      and the measure of whether that was worth doing is that all nine failures
+      in the `wiki/broken` fixture map to a sentence in it. End to end: a
+      scratch repository with this package installed as a dependency, a page
+      written by following the skill and nothing else, and `bunx wiki-validate`
+      exiting 0, which is also how the finish command was verified rather than
+      assumed. The 395 SKILL.md files installed on this machine are the corpus
+      for the contract, and they found three faults of mine before review. The
+      1024-character limit is on the description and not on the block, which
+      read as the block fails 43 of them, including shipped skills carrying
+      `metadata` and `hooks` around descriptions of 836, 908 and 1013
+      characters. A block that fails to parse was reported as two absent keys
+      that are visibly on the page, which is what a real, working skill whose
+      description carries a colon looks like. And a Markdown reference
+      definition whose label holds whitespace is not a definition: `[x:
+      string]: any` is a TypeScript index signature, and it was 180 of 188
+      dead-link reports. The corpus also prices the rule that a skill directory
+      holds `SKILL.md` and nothing else: 338 of the 395 carry more, so the rule
+      is this repo's own and deliberately narrower than the ecosystem's. Two
+      gpt-5.5 rounds, eight findings, each reproduced before it was acted on.
+      Round 1's worst was the one factual error in the skill, which told an
+      agent to split an over-budget page under `<slug>/`; the validator refuses
+      that for the wiki README, whose children have to be top-level. Its one
+      wrong finding was to scan bare prose for bin names, which the corpus
+      refutes: `re-validate` and `auto-generated` are 77 matches across those
+      files and not one is a command. Round 2 found the two faults that were in
+      the code rather than in the skill. `business_subtree` let the index carry
+      any edge to the README rather than only the parent edge doctrine names,
+      so a `related_pages: [README]` pair passed while being dead wherever the
+      subtree ships. And a wiki page could declare `title` twice: YAML keeps
+      the last of two, silently, so the page showed one title to a reader
+      scanning from the top and another to everything walking it. Both report
+      now, and duplicate detection is quote-aware, because `"title":` and
+      `title:` are one key to the parser and were two to the check.
 - [x] `P3-01` `doctrine.md`
       evidence: bun test — 469 pass, two of them new and written to fail first;
       `bun run skills/bin/project-validate.ts` still exits 0 here. The knowledge

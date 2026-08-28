@@ -129,6 +129,41 @@ describe("frontmatter contract", () => {
     });
 });
 
+describe("duplicate keys", () => {
+    /**
+     * YAML keeps the last of two and says nothing, so the page shows one title
+     * to a reader scanning from the top and another to everything that walks
+     * it.
+     */
+    test("a key written twice is an error", () => {
+        const pages = minimalWiki();
+        pages[1] = parseWikiPage(
+            "---\ntitle: Services\ntitle: Other Services\n"
+                + "parents: [README]\nchildren: []\nrelated_pages: []\n"
+                + "last_updated: 2026-08-27\n---\nBody.\n",
+            "services",
+            "docs/wiki/services.md",
+        );
+        const found = validateWikiGraph(pages);
+        expect(rules(found)).toEqual([ "wiki.duplicateKey" ]);
+        expect(found[0]!.message).toContain("title");
+    });
+
+    test("a quoted spelling is the same key", () => {
+        const pages = minimalWiki();
+        pages[1] = parseWikiPage(
+            '---\n"title": Services\ntitle: Other Services\n'
+                + "parents: [README]\nchildren: []\nrelated_pages: []\n"
+                + "last_updated: 2026-08-27\n---\nBody.\n",
+            "services",
+            "docs/wiki/services.md",
+        );
+        expect(rules(validateWikiGraph(pages))).toEqual([
+            "wiki.duplicateKey",
+        ]);
+    });
+});
+
 describe("parents and children", () => {
     test("the README must not have parents", () => {
         const pages = minimalWiki();
@@ -404,6 +439,39 @@ describe("a self-contained subtree", () => {
 
     test("edges inside the subtree pass, including the index's README parent", () => {
         expect(validateWikiGraph(wiki(), subtree)).toEqual([]);
+    });
+
+    /**
+     * The parent edge is the whole exception. Any other edge from the index to
+     * the README is dead wherever the subtree ships, and the README's
+     * reciprocal half of it is content that does not travel.
+     */
+    test("only the parent edge to the README is allowed out", () => {
+        const pages = wiki();
+        pages[0] = make("README", {
+            children: [ "business", "services" ],
+            related_pages: [ "business" ],
+            body: "See [[business]] and [[services]].\n",
+        });
+        pages[1] = make("business", {
+            parents: [ "README" ],
+            children: [ "business/orders" ],
+            related_pages: [ "README" ],
+            body: "See [[business/orders]].\n",
+        });
+        expect(rules(validateWikiGraph(pages, subtree)))
+            .toEqual([ "wiki.subtreeLeak" ]);
+    });
+
+    test("a body link from the index to the README is a leak", () => {
+        const pages = wiki();
+        pages[1] = make("business", {
+            parents: [ "README" ],
+            children: [ "business/orders" ],
+            body: "Back to [[README]], and [[business/orders]].\n",
+        });
+        expect(rules(validateWikiGraph(pages, subtree)))
+            .toEqual([ "wiki.subtreeLeak" ]);
     });
 
     test("a body link out of the subtree is a leak", () => {

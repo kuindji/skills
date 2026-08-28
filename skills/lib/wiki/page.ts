@@ -37,6 +37,8 @@ export interface WikiPage {
     path: string;
     /** Raw mapping. Unvalidated on purpose: the rules report on its shape. */
     frontmatter: Record<string, unknown>;
+    /** The raw YAML, which is the only place a duplicated key survives. */
+    frontmatterBlock: string;
     /** Everything after the closing delimiter. */
     body: string;
     /** 1-based line the body starts on, so body diagnostics carry a line. */
@@ -57,11 +59,12 @@ export function parseWikiPage(
     slug: string,
     path: string,
 ): WikiPage {
-    const { values, body, bodyStartLine, lines } = parseFrontmatter(raw);
+    const { values, block, body, bodyStartLine, lines } = parseFrontmatter(raw);
     return {
         slug,
         path,
         frontmatter: values,
+        frontmatterBlock: block,
         body,
         bodyStartLine,
         frontmatterLines: lines,
@@ -95,6 +98,20 @@ export interface BodyLine {
 }
 
 /**
+ * What the body splitter needs, which is less than a page.
+ *
+ * Stated structurally because a SKILL.md is read by the same splitter for the
+ * same reason: a command in a fence is not a command an agent should run, and
+ * a link in one is not an edge. Two readers of Markdown would answer those
+ * differently within a week of each other.
+ */
+export interface MarkdownBody {
+    body: string;
+    /** 1-based line the body starts on, so diagnostics carry a line. */
+    bodyStartLine: number;
+}
+
+/**
  * The body, line by line, with code separated from prose.
  *
  * Every rule that reads a page has to decide whether code counts, and they do
@@ -105,7 +122,7 @@ export interface BodyLine {
  * Splitting the views here lets each rule say which it means, instead of each
  * rule reimplementing Markdown and getting a different answer.
  */
-export function bodyLines(page: WikiPage): BodyLine[] {
+export function bodyLines(page: MarkdownBody): BodyLine[] {
     const out: BodyLine[] = [];
     const lines = page.body.split("\n");
     let fence: string | undefined;

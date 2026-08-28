@@ -9,8 +9,9 @@ It answers one question in five places: **what is the decay rate of this
 sentence, and what invalidates it.** Wiki, docs, tracker, checklists and code
 each have a different answer, and every rule here derives from one of them.
 
-Status: the validators run. The skills, the templates and this repo's own wiki
-are still to be written. The design is in
+Status: the validators run, and the first of four skills, `wiki-authoring`, is
+written. The other three, the templates and this repo's own wiki are still to
+come. The design is in
 [`docs/specs/2026-08-27-project-management-skills-design.md`](docs/specs/2026-08-27-project-management-skills-design.md)
 and the work is tracked in [`docs/tasks.md`](docs/tasks.md).
 

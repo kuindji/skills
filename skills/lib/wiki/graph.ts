@@ -1,3 +1,4 @@
+import { duplicateKeys } from "../markdown/frontmatter";
 import type { Diagnostic } from "../profile/types";
 import { bodyLinks, FRONTMATTER_KEYS, type WikiPage, wordCount } from "./page";
 
@@ -89,6 +90,21 @@ function checkFrontmatter(page: WikiPage, out: Diagnostic[]): boolean {
     const at = (key: string) => page.frontmatterLines[key];
 
     let usable = true;
+
+    for (const { key, line } of duplicateKeys(page.frontmatterBlock)) {
+        out.push({
+            file,
+            keyPath: key,
+            line,
+            rule: "wiki.duplicateKey",
+            message: `\`${key}\` is declared twice.`,
+            remedy:
+                "Delete one. YAML keeps the last of two, silently, so the page "
+                + "shows one value to a reader scanning from the top and "
+                + "another to everything that walks it.",
+            severity: "error",
+        });
+    }
 
     const title = fm["title"];
     if (typeof title !== "string" || title.trim() === "") {
@@ -366,8 +382,13 @@ function checkSubtree(
     }
 
     for (const edge of edges) {
+        // The parent edge is the whole exception. A `related_pages` or body
+        // link from the index to the README is dead wherever the subtree
+        // ships, and the README's reciprocal half of it is content that does
+        // not travel.
         const allowed = inSubtree(edge.target, subtree)
-            || (page.slug === subtree && edge.target === ROOT_SLUG);
+            || (page.slug === subtree && edge.target === ROOT_SLUG
+                && edge.keyPath === "parents");
         if (allowed) {
             continue;
         }

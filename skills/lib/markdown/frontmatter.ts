@@ -18,6 +18,16 @@ const FRONTMATTER_RE = /^---\r?\n([\s\S]*?)\r?\n---[ \t]*(?:\r?\n|$)/;
 export interface Frontmatter {
     /** The parsed mapping. Empty when there is no block or it is malformed. */
     values: Record<string, unknown>;
+    /**
+     * The raw YAML between the delimiters, empty when there is no block.
+     *
+     * Returned rather than left to the caller to reslice, because a caller
+     * measuring it against a limit has to slice the same source this function
+     * normalised: a byte-order mark ahead of the delimiter shifts the block by
+     * a character, and being one out at 1024 is being one out exactly where
+     * the loader begins truncating.
+     */
+    block: string;
     /** Everything after the closing delimiter. */
     body: string;
     /** 1-based line the body starts on, so body diagnostics carry a line. */
@@ -39,6 +49,7 @@ export function parseFrontmatter(raw: string): Frontmatter {
     if (!match) {
         return {
             values: {},
+            block: "",
             body: source,
             bodyStartLine: 1,
             lines: {},
@@ -61,6 +72,7 @@ export function parseFrontmatter(raw: string): Frontmatter {
 
     return {
         values,
+        block,
         body: source.slice(match[0].length),
         // The block opens on line 1, so the body starts one line past the
         // closing delimiter.
@@ -68,6 +80,34 @@ export function parseFrontmatter(raw: string): Frontmatter {
         lines: keyLines(block),
         present: true,
     };
+}
+
+/**
+ * Top-level keys the block declares more than once, with the line of the
+ * second one.
+ *
+ * Read off the raw text because the parsed mapping cannot show it: YAML keeps
+ * the last of two and drops the first without a word, so the file says one
+ * thing to a reader scanning from the top and another to everything that
+ * walks it.
+ */
+export function duplicateKeys(
+    block: string,
+): { key: string; line: number; }[] {
+    const seen = new Set<string>();
+    const found: { key: string; line: number; }[] = [];
+    block.split("\n").forEach((line, index) => {
+        const key = topLevelKey(line);
+        if (key === undefined) {
+            return;
+        }
+        if (seen.has(key)) {
+            // +2: the block excludes the opening `---`, which is line 1.
+            found.push({ key, line: index + 2 });
+        }
+        seen.add(key);
+    });
+    return found;
 }
 
 function countLines(text: string): number {
@@ -78,12 +118,25 @@ function countLines(text: string): number {
 function keyLines(block: string): Record<string, number> {
     const lines: Record<string, number> = {};
     block.split("\n").forEach((line, index) => {
-        const match = /^([A-Za-z0-9_-]+)\s*:/.exec(line);
-        const key = match?.[1];
+        const key = topLevelKey(line);
         if (key !== undefined && lines[key] === undefined) {
             // +2: the block excludes the opening `---`, which is line 1.
             lines[key] = index + 2;
         }
     });
     return lines;
+}
+
+/**
+ * The key a line declares, if it declares one at the top level.
+ *
+ * Quoted and bare spellings are the same key to YAML, so they are the same key
+ * here. Reading only the bare form lets `"title":` and `title:` sit in one
+ * block as a duplicate that nothing reports and the parser silently resolves.
+ */
+function topLevelKey(line: string): string | undefined {
+    const match = /^(?:([A-Za-z0-9_-]+)|"([^"]+)"|'([^']+)')\s*:/.exec(line);
+    return match === null
+        ? undefined
+        : match[1] ?? match[2] ?? match[3];
 }
