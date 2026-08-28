@@ -5,23 +5,77 @@ points here, which makes this file the sole authority for task state. No other
 file carries it. A task moves to Done only with an `evidence:` line naming the
 command that proves it.
 
-Ids are `<stage><n>`, stages following the build order in the design spec.
+Ids are `<stage><n>`, stages following the build order in the design spec,
+then `A` for the adoption order that spec ends with.
 
 ## Todo
 
 - [ ] `P5-02` Acceptance: `project-validate` exits 0 on this repo
-- [ ] `P5-03` Ship the design spec: `folded_into`, then `docs-freeze`
-      The spec is still `draft` while the build it describes is finished, so
-      the one document in this repo that the lifecycle class exists for has
-      never been through the transition it was written to gate. Shipping it is
-      also the only way `docs-freeze` and the fold gate get exercised here on a
-      real document rather than on a fixture.
+
+- [ ] `A-01` Adopt in the business-wiki repo
+      The smallest real subject: one product, a business-only wiki, no roadmap.
+      The first repository brought into compliance, and the first reading of
+      the templates by a repository that did not write them. Waits on `P5-02`,
+      which is the gate the design spec puts in front of every row below.
+
+- [ ] `A-02` Adopt in the commerce repo
+      The wiki validator's real trial: 150 pages, two wiki profiles, an
+      external tracker, mature mode, and the line-number worklist the spec
+      measured at 19 pages and 193 occurrences. Waits on `A-01`.
+
+- [ ] `A-03` Adopt in the mobile monorepo
+      Clone ownership, four products, per-product roadmaps and checklists. Its
+      profile already ships here as a fixture, so what is new is owner
+      resolution against four real clones sharing one origin. Waits on `A-02`.
+
+- [ ] `A-04` Adopt in the fourth project
+      Follows once the schema has survived the other three.
 
 ## In progress
 
 ## Blocked
 
 ## Done
+
+- [x] `P5-03` Ship the design spec: `folded_into`, then `docs-freeze`
+      evidence: `bun run skills/bin/docs-freeze.ts
+      docs/specs/2026-08-27-project-management-skills-design.md` — frozen at
+      58218e04e892; `bun test` — 599 pass, 0 fail; `bun run type-check` clean;
+      `bun run validate` — no problems over 12 pages and 5 documents, 1 of them
+      lifecycle. Both gates were verified red before being believed: a typo in
+      one `folded_into` slug fails `docs.foldGate` with exit 1, and a one-word
+      edit to the frozen body fails `docs.frozen` with exit 1, each restored
+      immediately after.
+      The spec is `shipped`, names the twelve wiki slugs its content now lives
+      in, and its body is frozen. It is the first real document either gate has
+      run against here; until today both had only ever seen fixtures.
+      The fold produced one new page, `adoption`, because the read found
+      exactly one subject the wiki did not hold. Everything about how a project
+      takes this package on lived only in the spec: a git dependency pinned to
+      a tag with no registry, bins that a consumer's package runner puts on the
+      path and that this repository has to invoke by file, six templates that
+      are copied and then owned and never updated from here again, and the
+      agent instructions file as the entry point because it is the one file
+      every agent reads unprompted. That is the half a freeze would have
+      entombed, which is the fold gate working as designed rather than as a
+      formality.
+      `folded_into` lists every page in the wiki, which is honest rather than
+      generous: the document designed the whole package, so its durable content
+      is the whole wiki. The one part it cannot record is the doctrine, which
+      took the spec's why-half during `P3-01` and is not a wiki page, so it has
+      no slug to name.
+      What deliberately stayed in the spec is the half a wiki must not hold:
+      the options that were rejected, the measurements each rule was decided on,
+      the argument against phasing the build, and the two places the build later
+      went the other way, `watch_paths` and the shape of the task-tracking
+      validator. Frozen at its date, those read as a record of a decision. Moved
+      into the wiki they would read as instructions, and corrected in place they
+      would erase that the decision was ever made.
+      folded into: `adoption` is new; the other eleven pages were written
+      against this spec in `P5-01` and are unchanged by it.
+      follow-up: `A-01` to `A-04` filed, the adoption order the spec closes
+      with. That was the only live intent left in the document, and a frozen
+      document is the one place intent cannot survive.
 
 - [x] `P5-01` Write this repo's `docs/wiki/`
       evidence: `bun test` — 599 pass, 0 fail; `bun run type-check` clean;

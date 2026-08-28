@@ -1,7 +1,7 @@
 ---
 title: The skills package
 parents: []
-children: [profile, validators, skills, drift, testing]
+children: [profile, validators, skills, drift, adoption, testing]
 related_pages: []
 last_updated: 2026-08-28
 ---
@@ -31,5 +31,7 @@ Where to go:
 - [[skills]] answers what an agent is told, and what a project owns instead of
   being told.
 - [[drift]] answers how the wiki gets ordered by what moved under it.
+- [[adoption]] answers how a project takes this on, and which half of it that
+  project then owns.
 - [[testing]] answers how this repository checks itself, and what the fixtures
   cover that it cannot.

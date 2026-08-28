@@ -1,9 +1,23 @@
 ---
 title: Project management skills
 type: spec
-status: draft
+status: shipped
 last_updated: 2026-08-27
 reviewed_by: gpt-5.5 round 1
+folded_into:
+  - README
+  - profile
+  - profile/owners
+  - profile/doc-classes
+  - validators
+  - validators/wiki-checks
+  - validators/docs-checks
+  - validators/guard
+  - skills
+  - drift
+  - adoption
+  - testing
+frozen_body_sha256: 58218e04e892616b2707c9552c72622e634d4dc91b4017ea810b77715b1e6ae0
 ---
 
 # Project management skills
