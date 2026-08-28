@@ -1,5 +1,12 @@
 import { describe, expect, test } from "bun:test";
-import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import {
+    mkdir,
+    mkdtemp,
+    readFile,
+    rm,
+    symlink,
+    writeFile,
+} from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { parseFrontmatter } from "../markdown/frontmatter";
@@ -628,5 +635,58 @@ describe("frontmatter the splice must not mangle", () => {
         expect(content.match(/frozen_body_sha256/g)).toHaveLength(1);
         expect(parseFrontmatter(content).values["frozen_body_sha256"])
             .toBe(hash);
+    });
+});
+
+describe("a document that is not really in the repository", () => {
+    /**
+     * A tracked symlink is a path inside the repository naming a file outside
+     * it, and freezing is the only thing in this system that writes. Measured
+     * before this refusal existed, a repo holding
+     * `docs/specs/2026-08-28-outside.md -> /tmp/outside.md` had that file
+     * rewritten by a bare `docs-freeze`, which then reported no problems.
+     */
+    test("a link out of the repo is refused rather than written through", async () => {
+        const directory = await mkdtemp(join(tmpdir(), "freeze-link-"));
+        const outside = join(directory, "outside.md");
+        const repo = join(directory, "repo");
+        try {
+            await mkdir(join(repo, "docs/specs"), { recursive: true });
+            await Bun.spawn([ "git", "init", "-q" ], { cwd: repo }).exited;
+            await writeFile(
+                join(repo, "project-profile.yaml"),
+                "tracker:\n  backend: in-repo\n  file: docs/tasks.md\n",
+            );
+            const body = "---\ntype: spec\nstatus: shipped\n---\n\nOutside.\n";
+            await writeFile(outside, body);
+            await symlink(
+                outside,
+                join(repo, "docs/specs/2026-08-28-outside.md"),
+            );
+
+            const profile = parseProfile(
+                `tracker:
+  backend: in-repo
+  file: docs/tasks.md
+docs:
+  root: docs
+  lifecycle: ["specs/*.md"]
+`,
+                "project-profile.yaml",
+            ).profile!;
+
+            const outcomes = await freezeDocs(profile, repo);
+            expect(outcomes).toHaveLength(1);
+            expect(outcomes[0]?.kind).toBe("refused");
+            expect(
+                outcomes[0]?.kind === "refused"
+                    ? outcomes[0].diagnostic.rule
+                    : undefined,
+            ).toBe("freeze.outsideRepository");
+            expect(await readFile(outside, "utf8")).toBe(body);
+        }
+        finally {
+            await rm(directory, { recursive: true, force: true });
+        }
     });
 });

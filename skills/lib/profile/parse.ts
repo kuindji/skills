@@ -54,6 +54,16 @@ export interface ParseOptions {
      * rest, so they are not required to repeat repo-wide settings.
      */
     kind?: "root" | "product";
+    /**
+     * Repo-wide settings a product profile inherits from the root.
+     *
+     * Inheriting has to happen here rather than being left to a caller,
+     * because the parsed shape cannot say whether a value was declared or
+     * defaulted. Without it, a product under a Linear tracker parsed as
+     * `in-repo` — the default — and every rule that asks where task state
+     * lives got the wrong answer for that product, silently.
+     */
+    inherit?: { trackerBackend?: TrackerBackend; };
 }
 
 export interface ParseResult {
@@ -172,6 +182,10 @@ export function parseProfile(
     // --- tracker -----------------------------------------------------------
     const tracker = isRecord(raw.tracker) ? raw.tracker : {};
     const backend = optionalString(tracker.backend);
+    const inheritedBackend = options.inherit?.trackerBackend;
+    if (inheritedBackend !== undefined) {
+        profile.tracker.backend = inheritedBackend;
+    }
     if (backend === undefined) {
         // A product profile inherits the backend from the root profile. Only
         // the root has to say where issue state lives.
@@ -185,6 +199,20 @@ export function parseProfile(
                 }.`,
             );
         }
+    }
+    else if (kind === "product") {
+        // Where task state lives is a property of the repository, not of one
+        // product in it. Two products disagreeing about it would each be
+        // right about their own docs and wrong about the repo they share.
+        add(
+            "tracker.backend",
+            "tracker.rootOnlyBackend",
+            "`tracker.backend` configures the whole repository, but this is a "
+                + "product profile.",
+            "Move it to the root project-profile.yaml. A product profile "
+                + "carries `tracker.project`, which is the board or list this "
+                + "product's tasks live in.",
+        );
     }
     else if (!TRACKER_BACKENDS.includes(backend as TrackerBackend)) {
         add(
@@ -477,4 +505,48 @@ function stringList(value: unknown): string[] {
 
 function errorText(error: unknown): string {
     return error instanceof Error ? error.message : String(error);
+}
+
+/**
+ * Whether a document configures a repository rather than a product.
+ *
+ * Discovery finds profiles by filename, and a repository can hold profiles
+ * that are not its own: test corpora like this repo's fixtures, a vendored
+ * copy, a sample project. A nested document declaring repo-wide settings and
+ * naming no product is claiming a repository, so it marks a boundary rather
+ * than a product.
+ *
+ * Both halves are load-bearing. The repo-wide keys are the same ones a product
+ * profile is refused for carrying, which keeps the two rules from drifting
+ * apart. And a document naming a product is never a boundary, however it is
+ * written: skipping it would turn a `wiki:` typed into the wrong profile from
+ * a reported error into silence, and a silent skip is the one outcome a
+ * misconfigured profile must not get.
+ *
+ * Unreadable YAML is not a boundary either. The file is then parsed as a
+ * product profile and reports its syntax error there.
+ */
+export function looksLikeRepositoryRoot(source: string): boolean {
+    let raw: unknown;
+    try {
+        raw = Bun.YAML.parse(source);
+    }
+    catch {
+        return false;
+    }
+    if (!isRecord(raw)) {
+        return false;
+    }
+    if (typeof raw.product === "string" && raw.product.trim() !== "") {
+        return false;
+    }
+    if (Object.keys(raw).some((key) => ROOT_ONLY_KEYS.has(key))) {
+        return true;
+    }
+    // `tracker.backend` is repo-wide too, and it is the only repo-wide setting
+    // that lives under a key a product profile may also use. A nested repo
+    // declaring nothing but a tracker and its docs would otherwise be adopted
+    // as a product of this one.
+    return isRecord(raw.tracker)
+        && typeof raw.tracker.backend === "string";
 }

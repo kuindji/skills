@@ -9,7 +9,6 @@ Ids are `<stage><n>`, stages following the build order in the design spec.
 
 ## Todo
 
-- [ ] `P2-07` `project-validate` umbrella
 - [ ] `P3-01` `doctrine.md`
 - [ ] `P3-02` `wiki-authoring` SKILL.md
 - [ ] `P3-03` `project-docs` SKILL.md
@@ -25,6 +24,46 @@ Ids are `<stage><n>`, stages following the build order in the design spec.
 
 ## Done
 
+- [x] `P2-07` `project-validate` umbrella
+      evidence: bun test — 467 pass across the repo, and
+      `bun run skills/bin/project-validate.ts` exits 0 here, which is the
+      acceptance gate the spec sets. Six bins over one shared context: the
+      umbrella reads the repository once and hands it to each check, because
+      three processes would re-read it and report the same profile error three
+      times. Three exit codes rather than two, since a CI job that cannot tell
+      "this repo fails a rule" from "this tool was pointed at the wrong
+      directory" treats the second as the first. Discovery is the part that
+      needed a rule: a plain search for `project-profile.yaml` finds four in
+      this repo, three of them fixture repositories, and read as products they
+      would claim `apps/quiz` and `packages/notes-*` and fail this repo over
+      its own test data. A nested profile that declares repo-wide settings and
+      names no product is therefore a boundary, skipped with everything under
+      it and named in the run's output, because a silent skip is only
+      trustworthy if it says what it skipped. Probing found four faults before
+      review, each now covered: a product's shipped spec was told its
+      `folded_into` pages did not exist, since slugs were read per profile and
+      a product may not declare a wiki; the guard refused
+      `/private/var/…/repo/build/x.ts` against `/var/…/repo` as outside the
+      repository, which on macOS is the ordinary form of the pre-write call it
+      exists to answer; pointing any bin at a directory with no `.git` printed
+      a stack trace under exit 1; and pointing one at a subdirectory silently
+      measured no document age at all, because `git ls-files` answers relative
+      to the subdirectory and `git log` relative to the root. Two more were
+      layout faults the spec's own recommendation walked into: a
+      `project-profile.yaml` sitting at a product's docs root demanded a doc
+      class, and a product docs root nested inside the repo's made every
+      document in it unclassified from the outside. The gpt-5.5 review found
+      four more, all reproduced before fixing. The worst wrote outside the
+      repository: a tracked symlink under `specs/` is a path git reports,
+      classifies as lifecycle and hands to the one part of this system that
+      writes, so a bare `docs-freeze` rewrote `/tmp/outside.md` and reported no
+      problems. The others were a product profile silently reading as
+      `in-repo` under a Linear root, since the parser documented an
+      inheritance nothing performed; a `--base` ref that does not exist
+      crashing instead of reporting; and a nested repository declaring only a
+      tracker and a docs root being adopted as a product, which is what makes
+      `tracker.backend` repo-wide enough to be refused in a product profile
+      and to count as a boundary signal.
 - [x] `P2-06` `guard-generated`: generated paths and clone write scope
       evidence: bun test skills/lib/guard — 58 pass; 398 across the repo. The
       rules as a library; the bin lands with the others at `P2-07`. The design

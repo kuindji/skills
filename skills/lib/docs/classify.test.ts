@@ -244,3 +244,33 @@ docs:
         expect(result.files).toEqual([]);
     });
 });
+
+describe("what is not a document", () => {
+    /**
+     * The spec puts each product's profile at that product's docs root,
+     * because that is what keeps each clone of a monorepo editing only files
+     * it owns. Demanding a doc class for it would make the recommended layout
+     * the one that fails.
+     */
+    test("a profile is configuration, not a document", () => {
+        const result = classifyDocPaths(STANDARD, [
+            "docs/quiz/project-profile.yaml",
+        ]);
+        expect(result.diagnostics).toEqual([]);
+        expect(result.files).toEqual([]);
+    });
+
+    test("a path another profile has claimed is left to it", () => {
+        const path = "docs/quiz/specs/2026-08-27-scoring.md";
+        const unclaimed = classifyDocPaths(STANDARD, [ path ]);
+        expect(unclaimed.diagnostics.map((d) => d.rule)).toEqual([
+            "docs.unclassified",
+        ]);
+
+        const claimed = classifyDocPaths(STANDARD, [ path ], {
+            claimed: new Set([ path ]),
+        });
+        expect(claimed.diagnostics).toEqual([]);
+        expect(claimed.files).toEqual([]);
+    });
+});

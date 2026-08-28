@@ -1,3 +1,5 @@
+import { basename } from "node:path";
+import { PROFILE_FILENAME } from "../profile/load";
 import {
     type Diagnostic,
     DOC_CLASSES,
@@ -24,6 +26,15 @@ export interface ClassifyOptions {
      * list would make most globs look dead.
      */
     reportDeadGlobs?: boolean;
+    /**
+     * Paths a more specific profile has already classified.
+     *
+     * Only meaningful in a multi-product repo, where a product's docs root can
+     * sit inside the repository's. Without it the outer profile reports every
+     * one of the inner profile's documents as matching no class, which is the
+     * opposite of true.
+     */
+    claimed?: Set<string>;
 }
 
 /**
@@ -138,6 +149,19 @@ export function classifyDocPaths(
             continue;
         }
         if (wikiPrefix !== undefined && path.startsWith(wikiPrefix)) {
+            continue;
+        }
+        // A profile is configuration, not a document, and the spec puts each
+        // product's profile at that product's docs root — which is exactly
+        // where this rule would otherwise demand a doc class for it. The
+        // recommended layout must not be the one that fails.
+        if (basename(path) === PROFILE_FILENAME) {
+            continue;
+        }
+        // Claimed by a profile closer to the file: in a multi-product repo a
+        // product's docs root sits inside the repository's, and the file has
+        // a class — just not from here.
+        if (options.claimed?.has(path)) {
             continue;
         }
 

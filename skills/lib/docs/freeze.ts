@@ -1,3 +1,4 @@
+import { isInside } from "../links";
 import { parseFrontmatter } from "../markdown/frontmatter";
 import type { Diagnostic, DocClass, Profile } from "../profile/types";
 import { classifyDocPaths } from "./classify";
@@ -420,6 +421,15 @@ export async function freezeDocs(
             outcomes.push(notLifecycle(path, docClass, repoPaths));
             continue;
         }
+        // A tracked symlink is a path inside the repository naming a file
+        // outside it, and this is the only place in the system that writes.
+        // Measured: a repo holding `docs/specs/2026-08-28-outside.md ->
+        // /tmp/outside.md` had that file rewritten by a bare `docs-freeze`,
+        // which then reported no problems.
+        if (!await isInside(repoRoot, `${base}${path}`)) {
+            outcomes.push(outsideRepository(path));
+            continue;
+        }
 
         const outcome = planFreeze(
             path,
@@ -440,6 +450,28 @@ export async function freezeDocs(
         outcomes.push(outcome);
     }
     return outcomes;
+}
+
+/** A document whose path leaves the repository through a link. */
+function outsideRepository(path: string): FreezeOutcome {
+    return {
+        kind: "refused",
+        path,
+        diagnostic: {
+            file: path,
+            keyPath: "",
+            rule: "freeze.outsideRepository",
+            message:
+                "This path is a link to a file outside the repository, and "
+                + "freezing it would write there.",
+            remedy:
+                "Move the document into the repository, or drop it from the "
+                + "lifecycle globs. A decision recorded outside the repository "
+                + "cannot be frozen against it: nothing here can tell when the "
+                + "other side changes.",
+            severity: "error",
+        },
+    };
 }
 
 /** Refusals that only say the document has not shipped yet. */

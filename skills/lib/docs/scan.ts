@@ -35,6 +35,11 @@ export interface ValidateDocsOptions {
     wikiSlugs?: Set<string>;
     /** Injectable so staleness has a fixed today in tests. */
     now?: Date;
+    /**
+     * Paths a more specific profile has already classified, so this one does
+     * not report them as belonging to no class.
+     */
+    claimed?: Set<string>;
 }
 
 export interface DocsValidateResult extends ClassifyResult {
@@ -55,7 +60,10 @@ export async function validateDocs(
     repoRoot: string,
     options: ValidateDocsOptions = {},
 ): Promise<DocsValidateResult> {
-    const classified = await scanDocs(profile, repoRoot);
+    const classified = await scanDocs(profile, repoRoot, {
+        reportDeadGlobs: true,
+        claimed: options.claimed,
+    });
     const diagnostics: Diagnostic[] = [ ...classified.diagnostics ];
     const base = repoRoot.endsWith("/") ? repoRoot : `${repoRoot}/`;
     const now = options.now ?? new Date();
