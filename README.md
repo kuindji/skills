@@ -39,6 +39,7 @@ information about that product.
 
 | Path                         | Holds                                                 |
 | ---------------------------- | ----------------------------------------------------- |
+| `skills/doctrine.md`         | The rules every skill links to instead of restating.  |
 | `skills/<name>/SKILL.md`     | A skill. The `SKILL.md` is what makes it one.         |
 | `skills/templates/`          | Files copied into a consuming repo, then owned there. |
 | `skills/lib/`, `skills/bin/` | Implementation and entry points.                      |

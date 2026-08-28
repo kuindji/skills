@@ -1,3 +1,4 @@
+import { patternsCollide } from "./paths";
 import {
     type Diagnostic,
     DOC_CLASSES,
@@ -393,15 +394,21 @@ function readOwners(
     // The default owner is excluded: it claims leftovers by definition, so it
     // cannot conflict with an explicit claim.
     const explicit = owners.filter((o) => !o.isDefault);
-    const seen = new Map<string, string>();
+    // Two claims overlap when they could ever name the same file, not when
+    // they are spelled the same way. `packages` and `packages/ui` partition
+    // nothing, and comparing the strings reported them as disjoint. This is
+    // the same standard the product path index already holds `paths` to.
+    const seen: { path: string; owner: string; }[] = [];
     for (const owner of explicit) {
         for (const path of owner.paths) {
-            const previous = seen.get(path);
+            const previous = seen.find((claim) =>
+                claim.owner !== owner.name && patternsCollide(claim.path, path)
+            );
             if (previous !== undefined) {
                 add(
                     "owners",
                     "owners.overlap",
-                    `\`${path}\` is claimed by both \`${previous}\` and `
+                    `\`${path}\` is claimed by both \`${previous.owner}\` and `
                         + `\`${owner.name}\`.`,
                     "Ownership must partition the repo. Give the path to one "
                         + "owner, or move the shared part into its own path "
@@ -409,7 +416,7 @@ function readOwners(
                 );
             }
             else {
-                seen.set(path, owner.name);
+                seen.push({ path, owner: owner.name });
             }
         }
     }

@@ -116,6 +116,40 @@ owners:
         expect(d?.message).toContain("packages/ui");
     });
 
+    // Ownership must partition the repo, and two patterns that claim the same
+    // file overlap whether or not they are spelled the same way. Product paths
+    // were already held to that standard; owners were compared as strings, so
+    // the pair most likely to be written by hand went unreported.
+    test("owner claims that collide without matching as strings are an error", () => {
+        const result = parse(`
+tracker:
+  backend: clickup
+owners:
+  main:
+    paths: [packages]
+  product:
+    paths: [packages/ui]
+`);
+        const d = result.diagnostics.find((d) => d.rule === "owners.overlap");
+        expect(d).toBeDefined();
+        expect(d?.message).toContain("packages/ui");
+        expect(d?.message).toContain("main");
+    });
+
+    test("a glob owner claim colliding with a literal one is an error", () => {
+        const result = parse(`
+tracker:
+  backend: clickup
+owners:
+  notes:
+    paths: ["packages/notes-*"]
+  domain:
+    paths: [packages/notes-domain]
+`);
+        const d = result.diagnostics.find((d) => d.rule === "owners.overlap");
+        expect(d).toBeDefined();
+    });
+
     test("the default owner does not count as an overlap", () => {
         const result = parse(`
 tracker:

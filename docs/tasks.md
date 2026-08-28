@@ -9,7 +9,6 @@ Ids are `<stage><n>`, stages following the build order in the design spec.
 
 ## Todo
 
-- [ ] `P3-01` `doctrine.md`
 - [ ] `P3-02` `wiki-authoring` SKILL.md
 - [ ] `P3-03` `project-docs` SKILL.md
 - [ ] `P3-04` `task-tracking` SKILL.md
@@ -24,6 +23,34 @@ Ids are `<stage><n>`, stages following the build order in the design spec.
 
 ## Done
 
+- [x] `P3-01` `doctrine.md`
+      evidence: bun test — 469 pass, two of them new and written to fail first;
+      `bun run skills/bin/project-validate.ts` still exits 0 here. The knowledge
+      map the four skills will link to instead of restating, so the test of what
+      belongs in it is whether two skills would otherwise have to say the same
+      thing. That test is what pulled in profile resolution, the lifecycle
+      status contract and the owner-scope severities, and what kept per-class
+      enforcement detail out. Writing it against the finished validators rather
+      than against the spec is what made it useful, because the code has moved:
+      the spec's six doc classes are seven in `DOC_CLASSES`, `ignored` among
+      them, and three things under a docs root are exempt from classification
+      that the spec never mentions. The umbrella is the sharpest divergence.
+      The spec says `project-validate` runs all six bins; it runs three, because
+      `guard-generated` judges a change rather than a repository and
+      `docs-freeze` writes. Doctrine records the implemented scope and names the
+      divergence rather than narrowing the spec in silence. Two gpt-5.5 review
+      rounds, nine findings between them, every one reproduced against the code
+      before it was acted on. Round 1 caught a claim of mine that was flatly
+      wrong: that a dated document cannot mislead, which is true of a shipped
+      doc and false of an `active` one, the exact case `stale_after_days`
+      exists for. Round 2 found the only one that was a code fault rather than a
+      prose fault, and it is the reason this task touched `skills/lib`:
+      `owners.overlap` compared claim strings with `seen.get(path)`, so
+      `packages` and `packages/ui` declared by two owners partitioned nothing
+      and reported clean, while product `paths` were already held to
+      `patternsCollide` a few files away. Ownership is now checked by whether
+      two patterns could ever name the same file, which is what the rule always
+      said.
 - [x] `P2-07` `project-validate` umbrella
       evidence: bun test — 467 pass across the repo, and
       `bun run skills/bin/project-validate.ts` exits 0 here, which is the
