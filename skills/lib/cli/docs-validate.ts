@@ -84,9 +84,14 @@ export async function checkDocs(context: Context): Promise<Check> {
             classified.push(doc);
         }
         diagnostics.push(...result.diagnostics);
+        // An empty docs root is the repository root, and printing it as the
+        // empty string reads as a missing value rather than as an answer.
+        const root = profile.docs?.root === ""
+            ? "the repository root"
+            : profile.docs?.root;
         const where = profile.product === undefined
-            ? profile.docs?.root
-            : `${profile.docs?.root} (${profile.product})`;
+            ? root
+            : `${root} (${profile.product})`;
         notes.push(
             `${plural(result.files.length, "document")} under ${where}, `
                 + `${result.lifecycle.length} of them lifecycle.`,

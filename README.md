@@ -9,9 +9,10 @@ It answers one question in five places: **what is the decay rate of this
 sentence, and what invalidates it.** Wiki, docs, tracker, checklists and code
 each have a different answer, and every rule here derives from one of them.
 
-Status: the validators run, and three of the four skills are written,
-`wiki-authoring`, `project-docs` and `task-tracking`. `housekeeping`, the
-templates and this repo's own wiki are still to come. The design is in
+Status: the validators run, three of the four skills are written,
+`wiki-authoring`, `project-docs` and `task-tracking`, and the templates a
+project copies out of here ship. `housekeeping` and this repo's own wiki are
+still to come. The design is in
 [`docs/specs/2026-08-27-project-management-skills-design.md`](docs/specs/2026-08-27-project-management-skills-design.md)
 and the work is tracked in [`docs/tasks.md`](docs/tasks.md).
 
@@ -47,7 +48,18 @@ information about that product.
 | `docs/specs/`                | Dated design documents. Frozen once shipped.          |
 | `docs/wiki/`                 | How the system works now. Empty until milestone 1.    |
 
+## Adopting it
+
+Install the package, then copy four files out of `skills/templates/` and own
+them: the root profile, the house rules, the wiki principles, and the block
+that goes into `AGENTS.md`. Two more are conditional: `tasks.md` where task
+state lives in the repository rather than in a board, and one product profile
+per product where there is more than one. Each file carries its own
+instructions at the top. Nothing else here is meant to be edited by a consumer,
+and nothing outside those files is project-local.
+
 ## This repo follows its own rules
 
 `project-profile.yaml` at the root configures this repo the way a consuming repo
-would be configured. Its validators are meant to pass here first.
+would be configured, `AGENTS.md` and `docs/house-rules.md` are the templates
+with their paths edited, and the validators are meant to pass here first.

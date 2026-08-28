@@ -1,0 +1,183 @@
+# The root profile. Copy it to the root of the repository as
+# `project-profile.yaml` and then own it: this file binds the rules in
+# @kuindji/project-skills to one repository, and nothing in the skills is
+# configurable anywhere else.
+#
+# This is the single-product shape, which is what most repositories are: the
+# root profile carries the product fields directly and there is no second file.
+# A repository holding several products splits them, and the second file is
+# `product-profile.template.yaml` next to this one.
+#
+# Check the result with `bunx profile-validate`. Every key below is optional
+# except `tracker`, and a key left out is not a gap: absence is a
+# configuration. A repository with no wiki drops the `wiki` block, and the
+# rules that read it stop running rather than failing.
+
+# --- wiki --------------------------------------------------------------------
+
+# Drop this block if there is no wiki. Declaring a root that holds no pages is
+# legal and warns rather than failing, so a new repository can say where its
+# wiki will be before there is a page in it.
+wiki:
+  # Repo-relative directory. It is exempt from the `docs` classes below even
+  # when it sits inside the docs root, because its pages answer to
+  # `wiki-validate` instead. Two files at this root are neither: a
+  # `wiki-principles.md` or a `PRINCIPLES.md` is prose about the wiki rather
+  # than a page in it, so no validator reads it and nothing reports it as an
+  # orphan.
+  root: docs/wiki
+  # The style profiles this wiki runs. Which ones exist, and what each one
+  # means, is project-local: name them here and describe them in the
+  # `wiki-principles.md` that sits at the wiki root.
+  profiles: [technical]
+  # `forbidden` rejects file paths in wiki prose. `citation` allows them and
+  # reports how many there are on every run. There is deliberately no off
+  # switch: a wiki that cites paths is choosing to re-check them, not choosing
+  # to stop counting them.
+  path_citations: forbidden
+  # A subtree that ships on its own, relative to `root`. No edge may leave it,
+  # because a link out of it is dead wherever it is published, and its index
+  # naming the README as a parent is the one exception. Leave it out unless
+  # part of this wiki goes somewhere the rest of it does not.
+  # business_subtree: business
+
+# --- tracker -----------------------------------------------------------------
+
+# Where task state lives. Repo-wide, and the one block a root profile must
+# carry: what is intended and whether it is done have exactly one home, and a
+# repository that does not name it has that fact in no authoritative place.
+tracker:
+  # clickup, linear, taskflow, or in-repo.
+  backend: in-repo
+  # Required when the backend is `in-repo`: the one markdown file that holds
+  # task state. Give it a `tracker` glob in `docs` below as well, so it is
+  # classified as what it is. A tracker no doc class matches is a tracker
+  # nothing checks, and that reports as `docs.trackerUnchecked`.
+  file: docs/tasks.md
+  # The board or list this repository's tasks live in, under an external
+  # backend. In a multi-product repository this moves to each product profile.
+  # project: platform
+
+# --- taskflow ----------------------------------------------------------------
+
+# Whether the Taskflow CLI is available here. It is a separate axis from the
+# tracker rather than another backend for it: the tracker holds intent and
+# state, while Taskflow holds the local session, its worktree and its log.
+#
+# A running commentary on work in progress belongs in the tracker nowhere, and
+# that holds whether this is true or false. What this decides is whether the
+# commentary has a home at all: where it is true, `taskflow-cli log` is that
+# home.
+taskflow:
+  enabled: false
+
+# --- house rules -------------------------------------------------------------
+
+# Repo-relative path to the code rules this project owns. Copy
+# `house-rules.md` from next to this file, delete what does not apply, and add
+# what is missing. Code rules are a template rather than a skill because they
+# vary per project, and a versioned dependency is the wrong container for
+# something that has to be edited locally.
+house_rules: docs/house-rules.md
+
+# --- generated paths ---------------------------------------------------------
+
+# Files a generator writes. `guard-generated` refuses a change that touches
+# one, which is what makes the do-not-edit-generated-files rule mechanical
+# rather than a paragraph an agent has to remember.
+#
+# Most of these are gitignored, so a guard reading only a diff would report a
+# repository perfectly clean while missing every path it was installed to
+# protect. Declare them anyway: the guard takes a list of paths and the diff is
+# only one caller. A pattern that matches nothing on disk is reported, because
+# in review it reads as protection that is not there.
+generated_paths: []
+# generated_paths:
+#   - "**/*.generated.ts"
+#   - "hasura/**/*.yaml"
+#   - "apps/*/ios/**"
+
+# --- documents ---------------------------------------------------------------
+
+# Every file under the docs root matches exactly one class. No match is an
+# error rather than a silent pass, because a stray dated plan landing outside
+# these globs would escape naming, freezing and the fold gate together.
+#
+# Globs are relative to `root`. A leading `/` makes one repo-root-relative,
+# which is how a front-door `README.md` gets a class without being moved under
+# `docs/`.
+docs:
+  root: docs
+  # Specs and plans. The only date-named class, frozen on shipping, and the
+  # only one the fold gate applies to.
+  lifecycle: ["specs/*.md", "plans/*.md"]
+  # Present-tense prose claiming to be current: READMEs, roadmaps, the house
+  # rules, the AGENTS.md block. Free-named, and flagged for review once
+  # `review_after_days` passes. A file outside the docs root reaches a class
+  # only through a glob like these, and is never reported as unclassified, so
+  # one left out ages unwatched rather than loudly.
+  live: ["/README.md", "/AGENTS.md", "house-rules.md"]
+  # The in-repo tracker. Set it when `tracker.backend` is `in-repo`, and leave
+  # it empty otherwise. The file itself is `tasks.md` next to this template;
+  # a tracker no class matches is a tracker no rule runs over, and that is
+  # reported rather than passed over.
+  tracker: ["tasks.md"]
+  # Append-only evidence: what was observed, on which build.
+  checklists: []
+  # Material dated by its own content: research, policies, vendor documents.
+  reference: []
+  # Anything not validated at all. Images, captures, exports.
+  assets: []
+  # A deliberate exclusion, written down. This is a class rather than an
+  # exemption so that what is skipped is a glob somebody wrote rather than a
+  # silence.
+  ignored: []
+  # A lifecycle document still `active` after this many days without a commit
+  # is stale: it describes work in progress, and nothing about its filename
+  # says the work stopped.
+  stale_after_days: 30
+  # A `live` document untouched for this long is flagged for review. It is a
+  # warning, because a mature repository has a lot of them and a rule that
+  # fails the build over prose age gets switched off.
+  review_after_days: 90
+
+# --- mode --------------------------------------------------------------------
+
+# What ceremony a path is held to. Declared, never inferred, and resolved per
+# path rather than per repository, so a greenfield subsystem inside a mature
+# repository does not inherit mature gates and a hardened package inside a
+# young app does not lose them.
+mode:
+  # greenfield or mature.
+  default: greenfield
+  # Longest matching path prefix wins.
+  # overrides:
+  #   packages/domain: mature
+
+# --- owners ------------------------------------------------------------------
+
+# Leave this block out unless several clones of this repository write to it
+# from different scopes. It is not a description of who works here: it governs
+# `guard-generated`, so an owners block naming directories this repository does
+# not have refuses real writes rather than documenting anything.
+#
+# Ownership and product are separate axes. An owner scope says what a clone may
+# write; a product says which docs, tracker project and mode apply. A shared
+# package is owned by one clone and consumed by every product.
+#
+# The current owner is resolved from a gitignored `.agent-owner` file at the
+# clone root, then from the basename of the clone's main working tree, which
+# also answers correctly from a worktree under `.worktrees/`.
+#
+# owners:
+#   main:
+#     paths: [packages/ui, web, docs/wiki, docs/specs, scripts]
+#     # A change to a path a shared owner claims explicitly needs a consumer
+#     # blast-radius check before it lands.
+#     shared: true
+#     # Claims every path no explicit owner matched. At most one owner may.
+#     default: true
+#   notes:
+#     paths: [apps/notes-app, "packages/notes-*", docs/notes-app]
+#   portal:
+#     paths: [backend/portal, docs/portal]

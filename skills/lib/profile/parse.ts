@@ -311,8 +311,28 @@ export function parseProfile(
         for (const cls of DOC_CLASSES) {
             globs[cls] = stringList(docs[cls]);
         }
+        const root = normaliseDocsRoot(docs.root);
+        if (kind === "product" && root === "") {
+            const directory = file.includes("/")
+                ? file.slice(0, file.lastIndexOf("/"))
+                : "";
+            add(
+                "docs.root",
+                "docs.root",
+                "This product profile names the repository root as its docs "
+                    + "root.",
+                "`docs.root` is relative to the repository, not to this file. "
+                    + (directory === ""
+                        ? "Name the directory holding this product's documents."
+                        : `Write \`root: ${directory}\`, the directory this `
+                            + "profile sits in.")
+                    + " A product owns a subtree, so a docs root at the "
+                    + "repository root would demand a class from this product "
+                    + "for every file in the repository.",
+            );
+        }
         profile.docs = {
-            root: trimSlashes(optionalString(docs.root)) ?? "docs",
+            root,
             globs,
             staleAfterDays: optionalNumber(docs.stale_after_days) ?? 30,
             reviewAfterDays: optionalNumber(docs.review_after_days) ?? 90,
@@ -503,6 +523,29 @@ function lineFinder(source: string): (keyPath: string) => number | undefined {
  * setting reads correctly to a person and silently switches its rule off, so
  * the shape is settled here rather than defended at each use.
  */
+/**
+ * The docs root as a repo-relative prefix.
+ *
+ * Every spelling of the repository root normalises to the empty string. They
+ * used to normalise to themselves, and nothing starts with `./` or with `/`,
+ * so a profile written that way classified no file at all while reading as
+ * fully configured: found by copying the product-profile template, whose
+ * `root: .` came from the design spec, into a scratch repository, where the
+ * documents it owned were reported as unclassified by the profile above it.
+ *
+ * Repo-relative includes a product profile sitting at the directory it means.
+ * There is no notion of the file's own position here, and giving `.` that
+ * reading would make one key mean two things depending on which file it is in.
+ */
+function normaliseDocsRoot(value: unknown): string {
+    const given = optionalString(value);
+    if (given === undefined) {
+        return "docs";
+    }
+    return trimSlashes(given.replace(/^\.\//, "").replace(/^\/+/, ""))
+        .replace(/^\.$/, "");
+}
+
 function trimSlashes<T extends string | undefined>(value: T): T {
     return (typeof value === "string"
         ? value.replace(/\/+$/, "")

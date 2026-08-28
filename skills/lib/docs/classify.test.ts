@@ -357,3 +357,49 @@ describe("what is not a document", () => {
         expect(claimed.files).toEqual([]);
     });
 });
+
+/**
+ * A docs root naming the repository root.
+ *
+ * Found by copying the product-profile template into a scratch repository:
+ * the spec's own example writes `root: .`, which prefixed nothing, so the
+ * profile classified zero documents while looking configured. Every document
+ * it owned was then reported as unclassified by the profile above it, which
+ * sends a reader to add globs to the wrong file.
+ */
+describe("a docs root at the repository root", () => {
+    const AT_ROOT = profileFrom(`
+tracker:
+  backend: in-repo
+  file: tasks.md
+docs:
+  root: .
+  live: ["README.md"]
+  tracker: ["tasks.md"]
+`);
+
+    test("classifies the files at the repository root", () => {
+        const result = classifyDocPaths(AT_ROOT, [ "README.md", "tasks.md" ]);
+        expect(result.diagnostics).toEqual([]);
+        expect(result.files.map((f) => f.docClass)).toEqual([
+            "live",
+            "tracker",
+        ]);
+    });
+
+    test("sweeps the whole repository for files matching no class", () => {
+        const result = classifyDocPaths(AT_ROOT, [ "src/index.ts" ]);
+        expect(result.diagnostics.map((d) => d.rule)).toContain(
+            "docs.unclassified",
+        );
+    });
+
+    test("a dead glob names that root rather than an empty string", () => {
+        const result = classifyDocPaths(AT_ROOT, [ "README.md" ], {
+            reportDeadGlobs: true,
+        });
+        const dead = result.diagnostics.find((d) => d.rule === "docs.deadGlob");
+        expect(dead?.remedy).toContain("the repository root");
+        expect(dead?.remedy).not.toContain("``");
+    });
+});

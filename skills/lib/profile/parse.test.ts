@@ -280,3 +280,42 @@ describe("root versus product profiles", () => {
         ).toBe(true);
     });
 });
+
+/**
+ * `docs.root` is repo-relative, and the spellings of the repository root
+ * itself are the ones that used to prefix nothing at all.
+ */
+describe("the docs root", () => {
+    test("`.` is the repository root", () => {
+        const result = parseProfile(
+            `tracker:\n  backend: linear\ndocs:\n  root: .\n`,
+            "project-profile.yaml",
+        );
+        expect(result.diagnostics).toEqual([]);
+        expect(result.profile?.docs?.root).toBe("");
+    });
+
+    test("a leading `./` is dropped", () => {
+        const result = parseProfile(
+            `tracker:\n  backend: linear\ndocs:\n  root: ./docs/\n`,
+            "project-profile.yaml",
+        );
+        expect(result.profile?.docs?.root).toBe("docs");
+    });
+
+    /**
+     * A product owns a subtree. One claiming the repository as its docs root
+     * would demand a class from this product for every file in the repo,
+     * including the other products' documents.
+     */
+    test("a product may not claim the repository root", () => {
+        const result = parseProfile(
+            `product: notes\npaths: [apps/notes]\ndocs:\n  root: .\n`,
+            "docs/notes-app/project-profile.yaml",
+            { kind: "product" },
+        );
+        const d = result.diagnostics.find((d) => d.rule === "docs.root");
+        expect(d?.severity).toBe("error");
+        expect(d?.remedy).toContain("docs/notes-app");
+    });
+});

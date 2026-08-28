@@ -9,12 +9,16 @@ Ids are `<stage><n>`, stages following the build order in the design spec.
 
 ## Todo
 
-- [ ] `P3-05` Templates
 - [ ] `P4-01` `housekeeping` SKILL.md and the sweep
       note: the spec's drift worklist has pages declaring `watch_paths` in
       frontmatter, and the wiki frontmatter contract is closed at five keys, so
       that escape hatch does not exist as written. Decide it there rather than
       widening the contract by accident.
+      note: `skills/templates/AGENTS-block.md` carries a table of which skill
+      to read when, and it has three rows because there are three skills. The
+      fourth row lands with this task, and `skills/lib/templates/` has the test
+      that will fail if the path is wrong but not one that notices the row is
+      missing.
 - [ ] `P5-01` Write this repo's `docs/wiki/`
 - [ ] `P5-02` Acceptance: `project-validate` exits 0 on this repo
 
@@ -23,6 +27,60 @@ Ids are `<stage><n>`, stages following the build order in the design spec.
 ## Blocked
 
 ## Done
+
+- [x] `P3-05` Templates
+      evidence: bun test — 546 pass, 15 of them new and every one written to
+      fail first, each verified red by breaking the thing it checks; `bun run
+      skills/bin/project-validate.ts` still exits 0 here. Six files a project
+      copies out of `skills/templates/` and then owns: the root profile, a
+      product profile, the tracker file, the house rules, the wiki principles,
+      and the block that goes into `AGENTS.md`. The spec named four; the
+      product profile is the fifth because the multi-product shape is one of
+      the three this system serves and reading it out of a frozen spec is not
+      adoption, and `tasks.md` is the sixth for the reason the review found.
+      A template is the one thing here that is never run where it is written,
+      so the measure is a repository that copies it. Four scratch repositories
+      with this package installed as a dependency: the default shape, the same
+      with a product profile added, one on Linear with no tracker file, and one
+      with the `wiki` block deleted. All four exit 0, with warnings that are
+      honest rather than absent, naming globs the repository has declared and
+      not yet written. That run is now a test, which is what makes it a claim
+      rather than a session: it copies every template into a scratch git
+      repository the way each template's own header says, and asserts the
+      umbrella reports `0 errors` over 4 documents.
+      The task found three faults, and two of them were the templates walking
+      into the system's own edges. Naming a template `project-profile.yaml`
+      makes it a profile: discovery is by that basename, so the shipped file
+      was read as configuration and this repo reported `skills/templates` as a
+      nested repository skipped. The templates carry `.template` in their names
+      and `profile.missing` now names the file that ships. The second was the
+      spec's own example. A product profile written `docs.root: .` prefixed
+      `./`, which no repo-relative path starts with, so it classified zero
+      documents while reading as fully configured, and every document it owned
+      was reported as unclassified against the profile above it, which sends a
+      reader to add globs to the wrong file. Every spelling of the repository
+      root now normalises to one, an empty root means every path is under it
+      rather than none, a product profile claiming the repository root is
+      refused with its own directory in the remedy, and the two messages that
+      printed the root no longer print it as an empty pair of backticks.
+      Two gpt-5.5 rounds, five findings, each reproduced before it was acted
+      on. Round 1 found the one that mattered: a verbatim copy of the templates
+      exited 1, because the profile declared an in-repo tracker at
+      `docs/tasks.md` and no template created that file, so
+      `docs.trackerUnchecked` fired on the first run of a repository that had
+      done exactly what it was told. My own scratch check had missed it by
+      writing that file by hand. It also found `AGENTS.md` sitting outside
+      every declared glob: the block tells a reader to create it, and a file
+      outside the docs root is never reported as unclassified, so it aged
+      unwatched. Round 2 found three claims of mine that the code contradicts,
+      all in comments that ship into other repositories: the board is named by
+      `tracker.project` and not by `tracker.backend`; a running commentary does
+      not accumulate in the tracker file in the absence of Taskflow, it belongs
+      in the tracker nowhere; and `wiki-principles.md` under the wiki root
+      answers to neither validator rather than to `wiki-validate`, which is the
+      one file whose whole subject is that distinction.
+      This repo now carries `AGENTS.md`, which is the block with its paths
+      edited, and `/AGENTS.md` in its `live` globs.
 
 - [x] `P3-04` `task-tracking` SKILL.md
       evidence: bun test — 531 pass, 12 of them new and every one written to

@@ -112,7 +112,10 @@ export function classifyDocPaths(
         );
     };
 
-    const docsPrefix = withTrailingSlash(docs.root);
+    // An empty root is the repository root, so every path is under it. Left
+    // to `withTrailingSlash` it would be `/`, which no repo-relative path
+    // starts with, and the profile would classify nothing.
+    const docsPrefix = docs.root === "" ? "" : withTrailingSlash(docs.root);
     // The wiki has its own validator and its own rules. When it sits inside
     // the docs root, as it usually does, classifying its pages would demand a
     // doc class for every wiki page.
@@ -227,8 +230,8 @@ export function classifyDocPaths(
                         + "file.",
                     remedy:
                         "Remove it, or correct it. Globs resolve relative to "
-                        + `the docs root (\`${docs.root}\`); prefix with \`/\` `
-                        + "to match from the repo root instead.",
+                        + `the docs root (${describeRoot(docs.root)}); prefix `
+                        + "with `/` to match from the repo root instead.",
                     severity: "warning",
                 });
             }
@@ -236,6 +239,16 @@ export function classifyDocPaths(
     }
 
     return { files, diagnostics };
+}
+
+/**
+ * The docs root as a reader should see it named.
+ *
+ * An empty root is the repository root, and printed as an empty pair of
+ * backticks it reads as a missing value rather than as the answer.
+ */
+function describeRoot(root: string): string {
+    return root === "" ? "the repository root" : `\`${root}\``;
 }
 
 function withTrailingSlash(path: string): string {

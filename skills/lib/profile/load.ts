@@ -7,6 +7,20 @@ import type { Diagnostic, Profile } from "./types";
 /** The filename every profile has, at the root and per product alike. */
 export const PROFILE_FILENAME = "project-profile.yaml";
 
+/**
+ * Where the profile a repository is missing can be copied from.
+ *
+ * Named as a dependency path, because that is where a consuming repository
+ * finds it. The shipped file carries a `.template` in its name rather than the
+ * name it is copied to: discovery here is by filename, so a second file called
+ * `project-profile.yaml` inside this package would be read as configuration
+ * for whatever repository it happened to sit in. Measured against this repo,
+ * it was reported as a nested repository skipped.
+ */
+export const TEMPLATE_PATH =
+    "node_modules/@kuindji/project-skills/skills/templates/"
+    + "project-profile.template.yaml";
+
 export interface LoadedProfiles {
     /** Absent when the repository has no readable root profile. */
     index?: ProductIndex;
@@ -52,9 +66,9 @@ export async function loadProfiles(
                 rule: "profile.missing",
                 message:
                     `This repository has no ${PROFILE_FILENAME} at its root.`,
-                remedy: "Copy the template from `skills/templates/"
-                    + `${PROFILE_FILENAME}` + "` and fill it in. Every rule "
-                    + "these validators enforce is configured there, so "
+                remedy: `Copy \`${TEMPLATE_PATH}\` to `
+                    + `\`${PROFILE_FILENAME}\` here and fill it in. Every `
+                    + "rule these validators enforce is configured there, so "
                     + "without it there is nothing to check against.",
                 severity: "error",
             } ],

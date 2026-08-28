@@ -22,7 +22,7 @@ docs:
   lifecycle: ["specs/*.md"]
   # A leading / makes a glob repo-root-relative, which is how the front door
   # gets a class without living under docs/.
-  live: ["house-rules.md", "/README.md"]
+  live: ["house-rules.md", "/README.md", "/AGENTS.md"]
   tracker: ["tasks.md"]
   checklists: []
   reference: []

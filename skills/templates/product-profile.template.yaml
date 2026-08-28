@@ -1,0 +1,82 @@
+# A product profile. Copy it to the product's docs root, where it must be
+# named `project-profile.yaml`: the same filename as the root profile.
+#
+# Only a repository holding several products needs one. The two-file split
+# exists to keep several products from contending on a single file, so a
+# repository with one product should not pay for it: there, the root profile
+# carries these keys directly and this file does not exist.
+#
+# The name is fixed and the location is free. Every profile in the repository
+# is discovered by that filename, a path-to-product index is built from the
+# `paths` each one claims, and resolving a file is a match against that index
+# rather than a walk up the directory tree. That is what lets a product own
+# disjoint subtrees at once, an app directory, a set of packages matching a
+# pattern, and a docs directory that sits nowhere near either, with no single
+# directory above them. Putting this file at the product's docs root is then
+# the recommendation rather than a requirement, because it keeps each clone of
+# a shared monorepo editing only files it owns.
+#
+# Repo-wide settings are refused here. `wiki`, `owners`, `generated_paths`,
+# `house_rules`, `taskflow`, `tracker.backend` and `tracker.file` configure the
+# repository, so they stay in the root profile and this product inherits them.
+
+# What this product is called. It is the name the index reports and the name a
+# skill says out loud when it resolves a path, so make it the name people use.
+product: notes-app
+
+# The code and docs this product owns, as globs. They may not overlap with
+# another product's: no file belongs to two, and two patterns overlap when they
+# could ever name the same file rather than when they are spelled alike.
+# Anything no product claims falls back to the root profile acting as the
+# default product, so this list does not have to be exhaustive.
+paths: [apps/notes-app, "packages/notes-*", docs/notes-app]
+
+# The board or list this product's tasks live in, inside the external tracker
+# the root profile declares. Which backend it is stays repo-wide: two products
+# disagreeing about where issue state lives would each be right about their own
+# docs and wrong about the repository they share.
+tracker:
+  project: notes-app
+
+# The release sequence, if this product has one. Optional, and at most one per
+# product. A product that ships continuously has no ordered list of what lands
+# when, and inventing one gives it a document nobody updates. Absence here is a
+# configuration rather than an omission.
+#
+# Repo-relative, like every path in a profile.
+roadmap: docs/notes-app/milestones.md
+
+# This product's documents. The classes and their rules are the same as in the
+# root profile; only the globs differ per product.
+#
+# The docs root is usually the directory this file sits in, and it is named
+# from the repository root rather than from here: `root: .` would be the
+# repository root, which is refused in a product profile. The globs beneath it
+# are relative to it.
+docs:
+  root: docs/notes-app
+  lifecycle: ["specs/*.md", "plans/*.md"]
+  live: ["README.md", "milestones.md"]
+  # Set only when the root profile declares `tracker.backend: in-repo`. The
+  # file itself is named once, repo-wide, in the root profile: a product may
+  # hold it and classify it, but it may not name a different one.
+  tracker: []
+  # Declare a class when this product has files of that kind. A glob matching
+  # nothing is reported, because in review it reads as a rule that is running
+  # when it is not.
+  checklists: []
+  # checklists: ["*-checklist.md", "**/launch-checklist.md"]
+  reference: []
+  # reference: ["research/**", "policies/**", "legal-and-compliance/**"]
+  assets: []
+  # assets: ["branding/**", "repros/**"]
+  ignored: []
+  stale_after_days: 30
+  review_after_days: 90
+
+# Ceremony for this product's paths, resolved per path. A product can be
+# greenfield as a whole while one hardened package inside it is not.
+mode:
+  default: greenfield
+  overrides:
+    packages/notes-domain: mature
