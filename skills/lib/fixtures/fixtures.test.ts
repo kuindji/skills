@@ -1,10 +1,11 @@
 import { describe, expect, test } from "bun:test";
+import { writeIsAllowed } from "../guard/generated";
 import {
     buildProductIndex,
     modeForPath,
     productForPath,
 } from "../profile/index";
-import { ownerForPath, writeIsAllowed } from "../profile/owner";
+import { ownerForPath } from "../profile/owner";
 import { parseProfile } from "../profile/parse";
 import type { Profile } from "../profile/types";
 
@@ -55,6 +56,21 @@ describe("BearingKind: four products, clone ownership", () => {
         expect(
             productForPath(i, "packages/ui/src/Button.tsx")?.product,
         ).toBeUndefined();
+    });
+
+    /**
+     * The real ownership table names three packages that share no prefix, and
+     * a brace list is the only way to claim them in one pattern. Left out of
+     * the fixture, they fell to the default owner by complement, and a
+     * detector-game commit touching `packages/analysis` was reported as
+     * writing somewhere nobody claimed.
+     */
+    test("a brace list claims packages that share no prefix", async () => {
+        const { root } = await index();
+        for (const pkg of [ "taxonomy", "analysis", "persistence" ]) {
+            expect(ownerForPath(root, `packages/${pkg}/src/index.ts`)?.name)
+                .toBe("detector-game");
+        }
     });
 
     test("a product clone is refused a write to a shared package", async () => {

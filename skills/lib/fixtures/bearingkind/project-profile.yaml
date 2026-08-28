@@ -36,6 +36,15 @@ owners:
         docs/baby-sleep-tracker,
       ]
   detector-game:
-    paths: [apps/detector, apps/game, docs/detector, docs/game]
+    paths:
+      [
+        apps/detector,
+        apps/game,
+        # A brace list, which is how the real table names three packages that
+        # share no prefix.
+        "packages/{taxonomy,analysis,persistence}",
+        docs/detector,
+        docs/game,
+      ]
   relocant:
     paths: [backend/relocant, docs/relocant]

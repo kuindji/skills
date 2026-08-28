@@ -1,3 +1,4 @@
+import { claims, patternsCollide } from "./paths";
 import type { Diagnostic, Mode, Profile } from "./types";
 
 export interface ProductIndex {
@@ -109,7 +110,7 @@ export function productForPath(
 ): Profile | undefined {
     for (const product of index.products) {
         if (
-            product.paths.some((pattern) => covers(pattern, repoRelativePath))
+            product.paths.some((pattern) => claims(pattern, repoRelativePath))
         ) {
             return product;
         }
@@ -131,7 +132,7 @@ export function modeForPath(
     const profile = productForPath(index, repoRelativePath) ?? index.root;
     let best: { prefix: string; mode: Mode; } | undefined;
     for (const [ prefix, mode ] of Object.entries(profile.mode.overrides)) {
-        if (!covers(prefix, repoRelativePath)) {
+        if (!claims(prefix, repoRelativePath)) {
             continue;
         }
         if (best === undefined || prefix.length > best.prefix.length) {
@@ -139,27 +140,4 @@ export function modeForPath(
         }
     }
     return best?.mode ?? profile.mode.default;
-}
-
-/** Whether a declared pattern covers a path, as a prefix or as a glob. */
-function covers(pattern: string, path: string): boolean {
-    if (path === pattern || path.startsWith(`${pattern}/`)) {
-        return true;
-    }
-    const glob = new Bun.Glob(pattern);
-    if (glob.match(path)) {
-        return true;
-    }
-    const head = path.split("/").slice(0, pattern.split("/").length).join("/");
-    return glob.match(head);
-}
-
-/**
- * Whether two declared patterns could ever claim the same file.
- *
- * Compared as patterns, not as matched files, so an overlap is reported when
- * the profiles are read rather than when a file lands in the contested space.
- */
-function patternsCollide(a: string, b: string): boolean {
-    return covers(a, b) || covers(b, a);
 }

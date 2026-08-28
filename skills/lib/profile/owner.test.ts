@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { ownerForPath, writeIsAllowed } from "./owner";
+import { writeIsAllowed } from "../guard/generated";
+import { ownerForPath, resolveOwner } from "./owner";
 import { parseProfile } from "./parse";
 import type { Profile } from "./types";
 
@@ -110,5 +111,82 @@ describe("writeIsAllowed", () => {
         expect(writeIsAllowed(single, undefined, "anything.ts").allowed).toBe(
             true,
         );
+    });
+});
+
+/**
+ * The default owner claims two very different populations under one name: the
+ * paths it listed for itself, and everything nobody claimed at all. Measured
+ * across 701 commits of the repository this fixture is drawn from, 115 span
+ * two owners; 79 of those reach the default owner through a path it explicitly
+ * listed, and 36 reach it only through the complement, topped by `bun.lock`
+ * and the root `package.json` — the two files that repo's own rules expressly
+ * permit any clone to commit. Refusing both alike would refuse every routine
+ * dependency install, so the guard has to be able to tell them apart.
+ */
+describe("how an owner matched", () => {
+    test("a listed path of an explicit owner matches explicitly", () => {
+        const match = resolveOwner(BEARINGKIND, "apps/detector/src/a.tsx");
+        expect(match?.owner.name).toBe("detector-game");
+        expect(match?.via).toBe("explicit");
+    });
+
+    test("a listed path of the default owner matches explicitly", () => {
+        const match = resolveOwner(BEARINGKIND, "packages/ui/src/Button.tsx");
+        expect(match?.owner.name).toBe("main");
+        expect(match?.via).toBe("explicit");
+    });
+
+    test("a path nobody listed reaches the default owner by complement", () => {
+        const match = resolveOwner(BEARINGKIND, "bun.lock");
+        expect(match?.owner.name).toBe("main");
+        expect(match?.via).toBe("default");
+    });
+
+    test("a repo with no owners resolves to nothing", () => {
+        const solo = profileFrom(
+            "tracker:\n  backend: in-repo\n  file: t.md\n",
+        );
+        expect(resolveOwner(solo, "a.ts")).toBeUndefined();
+    });
+
+    test("with no default owner, an unclaimed path resolves to nothing", () => {
+        const partial = profileFrom(`
+tracker:
+  backend: linear
+owners:
+  a:
+    paths: [apps/a]
+  b:
+    paths: [apps/b]
+`);
+        expect(resolveOwner(partial, "apps/a/x.ts")?.via).toBe("explicit");
+        expect(resolveOwner(partial, "README.md")).toBeUndefined();
+    });
+});
+
+/**
+ * Overlapping owner paths are a schema error, but the profile still parses and
+ * the guard still has to answer. Two resolvers disagreeing about who owns a
+ * path would mean the refusal message names a different owner from the one the
+ * rule consulted, which is worse than either answer alone.
+ */
+describe("resolveOwner and ownerForPath agree", () => {
+    const OVERLAPPING = profileFrom(`
+tracker:
+  backend: linear
+owners:
+  main:
+    paths: [docs]
+    shared: true
+    default: true
+  baby-sleep:
+    paths: [docs/baby-sleep-tracker]
+`);
+
+    test("an explicit owner wins even when the default is declared first", () => {
+        const path = "docs/baby-sleep-tracker/plan.md";
+        expect(ownerForPath(OVERLAPPING, path)?.name).toBe("baby-sleep");
+        expect(resolveOwner(OVERLAPPING, path)?.owner.name).toBe("baby-sleep");
     });
 });

@@ -9,7 +9,6 @@ Ids are `<stage><n>`, stages following the build order in the design spec.
 
 ## Todo
 
-- [ ] `P2-06` `guard-generated`
 - [ ] `P2-07` `project-validate` umbrella
 - [ ] `P3-01` `doctrine.md`
 - [ ] `P3-02` `wiki-authoring` SKILL.md
@@ -26,6 +25,42 @@ Ids are `<stage><n>`, stages following the build order in the design spec.
 
 ## Done
 
+- [x] `P2-06` `guard-generated`: generated paths and clone write scope
+      evidence: bun test skills/lib/guard — 58 pass; 398 across the repo. The
+      rules as a library; the bin lands with the others at `P2-07`. The design
+      turns on one measurement: all four `generated_paths` patterns BearingKind
+      declares are gitignored and have never been tracked in 701 commits, while
+      more than five thousand matching files sit on disk. A guard reading a
+      diff would have reported that repo perfectly clean while missing every
+      path it was installed to protect, so `guardChange` takes a list of paths
+      and the diff is only one caller. Owner scope needed two severities for
+      the same reason. Of 701 commits, 115 span two owners, but they split:
+      79 reach the default owner through a path it listed, and 36 reach it only
+      through the complement, led by `bun.lock` and root `package.json`, which
+      that repo's own AGENTS.md expressly permits any clone to commit. One
+      severity would refuse every routine install, so an explicit claim errors
+      and the complement warns. Replayed against all 701, 88.7% of real commits
+      are legal from at least one clone and the 11.3% that are not are the
+      cross-scope changes the rule exists for; TheFloorr reports 108 generated
+      touches over 23 of 800 commits, and this repo 0 over 12. Warning volume
+      was measured too, and twice cut: blast-radius and unclaimed-path warnings
+      are now one per change rather than one per file, after single commits
+      turned up carrying 60 copies of the same sentence. Every commit now draws
+      either no warning or exactly one. Probing path forms found the worst bug,
+      mine: `./hasura/x.yaml` and an absolute path both walked past every rule
+      in silence, which is what a pre-write hook actually passes. The gpt-5.5
+      review found three more over two rounds, each reproduced before fixing
+      and each fail-open: a file staged into a repo with no commits was seen by
+      neither the diff nor the untracked pass, a repo declaring owners but no
+      default let every unclaimed path through, and an acknowledgement written
+      `/hasura/x.yaml` suppressed a refusal the same string would have earned
+      as a changed path, making the escape hatch the one door that accepted a
+      form nothing else did. A fourth was checked and kept as it was: a
+      backslash is a legal filename character here, verified by creating such a
+      file, so translating separators would misattribute a real path rather
+      than fix one. Extracting the one path matcher the three path fields share
+      also turned up a trailing slash silently disabling a claim, the same
+      fault P2-01 found in `business_subtree`.
 - [x] `P2-05` `docs-freeze`: computing and writing `frozen_body_sha256`
       evidence: bun test skills/lib/docs — 153 pass. The writer half of the
       freeze, as a library; the `docs-freeze` bin lands with the others at
