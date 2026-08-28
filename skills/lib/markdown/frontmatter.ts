@@ -13,7 +13,23 @@
  * tells the reader nothing.
  */
 
-const FRONTMATTER_RE = /^---\r?\n([\s\S]*?)\r?\n---[ \t]*(?:\r?\n|$)/;
+/**
+ * The block, with its content optional.
+ *
+ * Optional because `---` on the line straight after `---` is an empty block
+ * and not the absence of one. Requiring a line between the delimiters made
+ * that file report as having no frontmatter at all, which is a sentence about
+ * a file the author is not looking at: theirs visibly opens with the two
+ * delimiters.
+ *
+ * The optional group is greedy while its contents stay lazy, so it is tried
+ * before it is skipped and every file that matched before matches the same
+ * way. Only the one case where no content line can satisfy it at all is read
+ * differently, which is the case being fixed. That matters more than it
+ * looks: `docs-freeze` splices a key into this block and saves the file, so a
+ * split that moved would rewrite documents around the wrong delimiter.
+ */
+const FRONTMATTER_RE = /^---\r?\n(?:([\s\S]*?)\r?\n)?---[ \t]*(?:\r?\n|$)/;
 
 export interface Frontmatter {
     /** The parsed mapping. Empty when there is no block or it is malformed. */
@@ -36,6 +52,21 @@ export interface Frontmatter {
     lines: Record<string, number>;
     /** Whether a delimited block was present at all. */
     present: boolean;
+    /**
+     * The block held something and it did not parse into a mapping.
+     *
+     * Told apart from an absent block and from an empty one because the
+     * three need different sentences. Every key of a block that did not
+     * parse is missing, so a rule reading the keys reports each of them as
+     * absent while it sits visibly on the page, and the author goes hunting
+     * for a key that is right there. Measured in three places in this
+     * repository before it was pulled out here.
+     *
+     * A block parsing to null is not malformed: an empty document and one
+     * holding only comments are both valid YAML that carry no keys, and
+     * "missing" is the true thing to say about them.
+     */
+    malformed: boolean;
 }
 
 /** Split a raw markdown file into its frontmatter and its body. */
@@ -54,6 +85,7 @@ export function parseFrontmatter(raw: string): Frontmatter {
             bodyStartLine: 1,
             lines: {},
             present: false,
+            malformed: false,
         };
     }
 
@@ -65,10 +97,9 @@ export function parseFrontmatter(raw: string): Frontmatter {
     catch {
         parsed = undefined;
     }
-    const values =
-        typeof parsed === "object" && parsed !== null && !Array.isArray(parsed)
-            ? parsed as Record<string, unknown>
-            : {};
+    const isMapping = typeof parsed === "object" && parsed !== null
+        && !Array.isArray(parsed);
+    const values = isMapping ? parsed as Record<string, unknown> : {};
 
     return {
         values,
@@ -77,6 +108,7 @@ export function parseFrontmatter(raw: string): Frontmatter {
         // The block opens on line 1, so the body starts one line past the
         // closing delimiter.
         bodyStartLine: countLines(match[0]) + 1,
+        malformed: block.trim() !== "" && !isMapping && parsed !== null,
         lines: keyLines(block),
         present: true,
     };

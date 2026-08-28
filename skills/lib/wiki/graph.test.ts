@@ -38,6 +38,36 @@ function yamlList(value: unknown): string {
 
 const rules = (diagnostics: Diagnostic[]) => diagnostics.map((d) => d.rule);
 
+/**
+ * A block that did not parse holds no keys, and reporting each of them as
+ * absent sends the reader hunting for keys that are visibly on the page. The
+ * shape that does it here is a flow collection split over several lines,
+ * which is valid YAML the parser this system uses refuses, and which is what
+ * an author writes when a `children` list outgrows one line.
+ */
+describe("a frontmatter block that does not parse", () => {
+    const page = parseWikiPage(
+        "---\ntitle: Orders\nparents: []\nchildren: [\n  a,\n]\n"
+            + "related_pages: []\nlast_updated: 2026-08-27\n---\nBody.\n",
+        "orders",
+        "docs/wiki/orders.md",
+    );
+
+    const onThePage = () =>
+        validateWikiGraph([ page ])
+            .filter((d) => d.file === "docs/wiki/orders.md");
+
+    test("is reported as itself, not as five absent keys", () => {
+        const found = onThePage();
+        expect(rules(found)).toEqual([ "wiki.frontmatterShape" ]);
+        expect(found[0]?.message).toContain("did not parse");
+    });
+
+    test("the remedy names what actually causes it", () => {
+        expect(onThePage()[0]?.remedy).toContain("one line");
+    });
+});
+
 /** The smallest wiki that passes everything: a README and one child. */
 function minimalWiki(): WikiPage[] {
     return [

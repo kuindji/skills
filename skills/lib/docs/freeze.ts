@@ -165,10 +165,11 @@ export function planFreeze(
     // broken YAML, and every check below would report the keys it can see as
     // missing. Saying "`status` is absent" about a file whose second line
     // reads `status: shipped` sends the author hunting for the wrong problem.
-    if (
-        Object.keys(parsed.values).length === 0
-        && block.lines.slice(1, block.close).join("").trim() !== ""
-    ) {
+    // The parser answers this, rather than a count of keys against a count of
+    // lines: a block holding only comments has no keys and parses perfectly,
+    // and calling that broken YAML is the same wrong answer in the other
+    // direction.
+    if (parsed.malformed) {
         return refuse(
             "freeze.badFrontmatter",
             "The frontmatter block did not parse, so nothing in it can be "
@@ -297,9 +298,13 @@ function splitBlock(raw: string, body: string): Block {
     // Split after each newline, so each line carries its own terminator and
     // a file mixing CRLF and LF survives a rewrite of one of its lines.
     const lines = head.split(/(?<=\n)/);
-    // The frontmatter regex is non-greedy, so the block is closed by the
-    // first `---` after the opening one.
-    const close = lines.findIndex(
+    // The head is exactly what the frontmatter regex matched, so its last
+    // line is the delimiter that closed the block. Searching forwards for the
+    // first `---` instead found a different delimiter whenever the block's
+    // own first line was one: the hash was then spliced into a phantom empty
+    // block and every key that authorised the freeze was pushed below the
+    // closing delimiter, into the body, where nothing reads it.
+    const close = lines.findLastIndex(
         (line, index) => index > 0 && /^---[ \t]*\r?\n?$/.test(line),
     );
     return {

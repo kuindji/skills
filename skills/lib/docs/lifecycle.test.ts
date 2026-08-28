@@ -126,6 +126,35 @@ describe("the frontmatter contract", () => {
     });
 });
 
+/**
+ * A block that did not parse holds no keys, so reporting `type` and `status`
+ * as absent points the author at two keys sitting visibly on the page. The
+ * shape that does it is a flow collection split over several lines, which is
+ * valid YAML the parser here refuses, and which is what an author writes when
+ * a `folded_into` list outgrows one line.
+ */
+describe("a frontmatter block that does not parse", () => {
+    const broken: DocFile = {
+        path: "docs/specs/2026-08-27-a-decision.md",
+        frontmatter: parseFrontmatter(
+            "---\ntype: spec\nstatus: shipped\nfolded_into: [\n  a,\n]\n"
+                + `---\n${BODY}`,
+        ),
+    };
+
+    test("is reported as itself, not as two absent keys", () => {
+        const found = check([ broken ]);
+        expect(found.map((d) => d.rule)).toEqual([
+            "docs.lifecycleFrontmatter",
+        ]);
+        expect(found[0]?.message).toContain("did not parse");
+    });
+
+    test("the remedy names what actually causes it", () => {
+        expect(check([ broken ])[0]?.remedy).toContain("one line");
+    });
+});
+
 describe("the fold gate", () => {
     const shipped = (extra: Record<string, string>) =>
         doc({ status: "shipped", extra: { ...extra } });

@@ -120,7 +120,7 @@ describe("frontmatter", () => {
             bins: BINS,
         });
         expect(rules(found)).toEqual([ "skill.frontmatterShape" ]);
-        expect(found[0]?.message).toContain("YAML");
+        expect(found[0]?.message).toContain("did not parse");
         expect(found[0]?.remedy).toContain("quote");
     });
 

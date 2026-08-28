@@ -129,6 +129,31 @@ function checkContract(doc: DocFile, out: Diagnostic[]): Status | undefined {
         return undefined;
     }
 
+    // A block that held something and parsed to nothing did not parse, so
+    // every key in it is missing. Reporting `type` and `status` as absent
+    // about a document whose frontmatter visibly carries both sends the
+    // author hunting for the wrong problem.
+    if (doc.frontmatter.malformed) {
+        out.push({
+            file: doc.path,
+            keyPath: "",
+            line: 1,
+            rule: "docs.lifecycleFrontmatter",
+            message: "The frontmatter block did not parse as a mapping, so "
+                + "nothing in it can be read.",
+            remedy:
+                "Frontmatter has to be `key: value` lines: a list or a bare "
+                + "scalar is valid YAML and carries no keys. Where it is meant "
+                + "to be a mapping, the causes are a tab used for indentation, "
+                + "an unquoted value carrying a colon, or a flow collection "
+                + "split over several lines, which is valid YAML the parser "
+                + "here refuses: write it on one line, or as an indented block "
+                + "list.",
+            severity: "error",
+        });
+        return undefined;
+    }
+
     const type = values["type"];
     if (typeof type !== "string" || type.trim() === "") {
         out.push({

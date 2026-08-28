@@ -89,6 +89,32 @@ function checkFrontmatter(page: WikiPage, out: Diagnostic[]): boolean {
     const fm = page.frontmatter;
     const at = (key: string) => page.frontmatterLines[key];
 
+    // A block that held something and parsed to nothing did not parse, and
+    // every rule below would report the keys it can see as absent. Saying
+    // `title` is missing about a page whose second line reads `title: Orders`
+    // sends the author hunting for the wrong problem, and the page is not a
+    // graph node until the block reads, so nothing else here can run.
+    if (page.frontmatterMalformed) {
+        out.push({
+            file,
+            keyPath: "",
+            line: 1,
+            rule: "wiki.frontmatterShape",
+            message: "The frontmatter block did not parse as a mapping, so "
+                + "nothing in it can be read.",
+            remedy:
+                "Frontmatter has to be `key: value` lines: a list or a bare "
+                + "scalar is valid YAML and carries no keys. Where it is meant "
+                + "to be a mapping, the causes are a tab used for indentation, "
+                + "an unquoted value carrying a colon, or a flow collection "
+                + "split over several lines, which is valid YAML the parser "
+                + "here refuses: write it on one line, or as an indented block "
+                + "list.",
+            severity: "error",
+        });
+        return false;
+    }
+
     let usable = true;
 
     for (const { key, line } of duplicateKeys(page.frontmatterBlock)) {

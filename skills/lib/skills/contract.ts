@@ -70,6 +70,8 @@ export interface Skill {
     hasFrontmatter: boolean;
     /** The raw YAML, so a block that failed to parse can be told apart. */
     block: string;
+    /** The block held something and did not parse, so it carries no keys. */
+    malformed: boolean;
     /** 1-based line of each frontmatter key, so diagnostics carry a line. */
     frontmatterLines: Record<string, number>;
     body: string;
@@ -87,7 +89,7 @@ export interface SkillContext {
 
 /** Split a SKILL.md into the pieces the rules read. Never throws. */
 export function parseSkill(source: string, path: string): Skill {
-    const { values, block, body, bodyStartLine, lines, present } =
+    const { values, block, body, bodyStartLine, lines, present, malformed } =
         parseFrontmatter(source);
     return {
         path,
@@ -95,6 +97,7 @@ export function parseSkill(source: string, path: string): Skill {
         frontmatter: values,
         hasFrontmatter: present,
         block,
+        malformed,
         frontmatterLines: lines,
         body,
         bodyStartLine,
@@ -271,20 +274,21 @@ function checkFrontmatter(
     // A block that is there and parsed to nothing did not parse. Reporting
     // its keys as absent sends the reader looking for keys that are visibly
     // on the page, which is the failure mode the house rule on diagnostics
-    // exists to prevent.
-    if (
-        skill.block.trim() !== "" && Object.keys(skill.frontmatter).length === 0
-    ) {
+    // exists to prevent. The parser answers it, so the same predicate is not
+    // written out a third time here.
+    if (skill.malformed) {
         out.push({
             file: skill.path,
             keyPath: "",
             line: 1,
             rule: "skill.frontmatterShape",
-            message: "The frontmatter block is not valid YAML.",
-            remedy: "The usual cause is a value carrying a colon, which a "
-                + "description does by default: quote the whole value, or "
-                + "rewrite it without the colon. Nothing in the block is read "
-                + "while it does not parse, so every key in it is missing.",
+            message:
+                "The frontmatter block did not parse as a mapping, so nothing "
+                + "in it can be read.",
+            remedy: "The block has to be `key: value` lines carrying `name` "
+                + "and `description`. The usual cause is a value holding a "
+                + "colon, which a description does by default: quote the "
+                + "whole value, or rewrite it without the colon.",
             severity: "error",
         });
         return;

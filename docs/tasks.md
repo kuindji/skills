@@ -9,7 +9,6 @@ Ids are `<stage><n>`, stages following the build order in the design spec.
 
 ## Todo
 
-- [ ] `P3-03` `project-docs` SKILL.md
 - [ ] `P3-04` `task-tracking` SKILL.md
 - [ ] `P3-05` Templates
 - [ ] `P4-01` `housekeeping` SKILL.md and the sweep
@@ -26,6 +25,54 @@ Ids are `<stage><n>`, stages following the build order in the design spec.
 
 ## Done
 
+- [x] `P3-03` `project-docs` SKILL.md
+      evidence: bun test — 519 pass, 15 of them new and every one written to
+      fail first; `bun run skills/bin/project-validate.ts` still exits 0 here.
+      The skill for writing, shipping and editing a document under a docs root,
+      written against the validators rather than the spec. Whether that was
+      worth doing is measurable the way `P3-02` measured it: every rule the docs
+      validators and the freeze writer can emit was enumerated and held against
+      the draft, which found five with no sentence covering them
+      (`docs.shallowClone`, `freeze.badFrontmatter`, `freeze.emptyBody`,
+      `freeze.anchoredKey`, `freeze.notLifecycle`) and one covered too weakly
+      (`docs.trackerClass`). Two stay deliberately thin,
+      `freeze.outsideRepository` and `freeze.anchoredKey`, because neither is
+      reachable by an agent following the skill. The seven `docs.tracker*` rules
+      about the shape of the tracker file are `P3-04`'s. End to end in a scratch
+      repository with this package installed as a dependency: a spec written by
+      following the skill and nothing else, folded into a wiki page, shipped,
+      frozen, and `bunx docs-validate` exiting 0 — and each claim checked
+      against the tool rather than assumed, including that a trailing-whitespace
+      sweep survives the hash while a reworded sentence does not.
+      Writing the skill is what found the bug behind most of this task. A
+      frontmatter block that fails to parse carries no keys, so every rule
+      reading them reported each key as absent while it sat visibly on the
+      page: five misreports on a wiki page whose `title:` is on line 2, two on a
+      lifecycle document. It is the same fault already fixed twice here, in
+      `planFreeze` and in the SKILL.md contract, with the heuristic copied each
+      time. It now lives once in the parser as `malformed`, and all four callers
+      read it. The shared predicate also drops a false positive the copies
+      shared: a block holding only comments is valid YAML that carries no keys,
+      and was being called broken YAML.
+      Two gpt-5.5 rounds, seven findings, each reproduced before it was acted
+      on. Round 1 caught a sentence of mine that my own fix had made false, the
+      two `docs-freeze` refusals an agent is likeliest to hit and that the skill
+      left out, and a third instance of the misreport: `---` on the line after
+      `---` was reported as the document having no frontmatter block, about a
+      file whose first two lines are exactly that. Round 2 found the one that
+      writes. `splitBlock` searched for the first `---` after the opener while
+      the parser had matched the last, so a document whose first content line
+      was itself `---` had the hash spliced into a phantom empty block and every
+      key that authorised the freeze pushed below the closing delimiter into the
+      body. It predates this task and both regexes produce it. Round 2's other
+      finding was that the new remedy explained parse failures while the rule
+      also fires on a list or a scalar, which is valid YAML in the wrong shape,
+      so it now names the mapping first. The regex change was the risk worth
+      checking rather than assuming: its optional group is greedy, so every file
+      that matched before matches identically and only the previously
+      unmatchable case moves, verified against `docs-freeze` round-tripping a
+      body opening with a rule, a second block, CRLF, a byte-order mark and
+      trailing spaces, and pinned by tests.
 - [x] `P3-02` `wiki-authoring` SKILL.md
       evidence: bun test — 500 pass, 31 of them new and every one written to
       fail first; `bun run skills/bin/project-validate.ts` still exits 0 here.

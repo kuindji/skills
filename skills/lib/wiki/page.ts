@@ -39,6 +39,8 @@ export interface WikiPage {
     frontmatter: Record<string, unknown>;
     /** The raw YAML, which is the only place a duplicated key survives. */
     frontmatterBlock: string;
+    /** The block held something and did not parse, so it carries no keys. */
+    frontmatterMalformed: boolean;
     /** Everything after the closing delimiter. */
     body: string;
     /** 1-based line the body starts on, so body diagnostics carry a line. */
@@ -59,12 +61,14 @@ export function parseWikiPage(
     slug: string,
     path: string,
 ): WikiPage {
-    const { values, block, body, bodyStartLine, lines } = parseFrontmatter(raw);
+    const { values, block, body, bodyStartLine, lines, malformed } =
+        parseFrontmatter(raw);
     return {
         slug,
         path,
         frontmatter: values,
         frontmatterBlock: block,
+        frontmatterMalformed: malformed,
         body,
         bodyStartLine,
         frontmatterLines: lines,

@@ -28,6 +28,64 @@ const BODY = "# A decision\n\nWhat was decided, and why.\n";
  * a formatter or a frontmatter migration does has to leave it alone; a change
  * to the prose has to move it.
  */
+/**
+ * A block holding only comments is valid YAML that carries no keys, so the
+ * true thing to say about it is that `status` is absent, not that the block
+ * is broken. The older check counted keys against lines and could not tell
+ * the two apart.
+ */
+/**
+ * The writer has to splice at the same delimiter the parser closed the block
+ * on. It searched for the first `---` after the opener while the parser had
+ * matched the last, so a document whose first content line is itself `---`
+ * was rewritten around a delimiter that closed nothing: the hash landed in a
+ * phantom empty block and the keys that authorised the freeze were pushed
+ * into the body, where nothing reads them.
+ */
+describe("the delimiter the hash is spliced against", () => {
+    const raw = "---\n---\ntype: spec\nstatus: shipped\nfolded_into: [a]\n"
+        + "---\nBody\n";
+
+    test("a block whose first line is a rule is not rewritten around it", () => {
+        const outcome = planFreeze("docs/specs/2026-08-27-a.md", raw);
+        expect(outcome.kind).toBe("frozen");
+        if (outcome.kind !== "frozen") {
+            return;
+        }
+        // Re-reading what would be saved is the check that matters: the keys
+        // have to still be keys, and the body has to still be the body.
+        const again = parseFrontmatter(outcome.content);
+        expect(again.values["status"]).toBe("shipped");
+        expect(again.values["type"]).toBe("spec");
+        expect(again.values["frozen_body_sha256"]).toBe(outcome.hash);
+        expect(again.body).toBe("Body\n");
+    });
+
+    test("freezing it twice is a no-op, not a second hash", () => {
+        const first = planFreeze("docs/specs/2026-08-27-a.md", raw);
+        expect(first.kind).toBe("frozen");
+        if (first.kind !== "frozen") {
+            return;
+        }
+        expect(planFreeze("docs/specs/2026-08-27-a.md", first.content).kind)
+            .toBe("unchanged");
+    });
+});
+
+describe("a frontmatter block that parses but carries nothing", () => {
+    test("is not reported as broken YAML", () => {
+        const outcome = planFreeze(
+            "docs/specs/2026-08-27-a.md",
+            "---\n# nothing here yet\n---\n\nA decision.\n",
+        );
+        expect(outcome.kind).toBe("refused");
+        if (outcome.kind !== "refused") {
+            return;
+        }
+        expect(outcome.diagnostic.rule).toBe("freeze.notShipped");
+    });
+});
+
 describe("what does not change the hash", () => {
     const same = (variant: string) =>
         expect(bodyHash(variant)).toBe(bodyHash(BODY));
