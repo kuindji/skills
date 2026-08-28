@@ -120,8 +120,24 @@ describe("a wiki with real violations", () => {
 });
 
 describe("a declared wiki that is not written yet", () => {
+    // A fixture rather than this repository's own wiki root, which was the
+    // subject until it had pages. A test whose meaning depends on a directory
+    // staying empty stops testing what it says the day the directory is
+    // filled, and it says so by failing the run that filled it.
     test("an empty root is a warning, not an error", async () => {
-        const profile = profileFor("docs/wiki");
+        const profile = profileFor(`${fixtures}/empty`);
+        const { diagnostics } = await validateWiki(profile, repoRoot);
+        expect(diagnostics).toHaveLength(1);
+        expect(diagnostics[0]!.rule).toBe("wiki.empty");
+        expect(diagnostics[0]!.severity).toBe("warning");
+    });
+
+    // Absent and empty are the same finding on purpose. A project that
+    // declared a root and has not made the directory is in the state the
+    // warning describes, and reporting it as a missing path would send the
+    // author to fix the profile they meant.
+    test("a root that does not exist warns the same way", async () => {
+        const profile = profileFor(`${fixtures}/not-written`);
         const { diagnostics } = await validateWiki(profile, repoRoot);
         expect(diagnostics).toHaveLength(1);
         expect(diagnostics[0]!.rule).toBe("wiki.empty");

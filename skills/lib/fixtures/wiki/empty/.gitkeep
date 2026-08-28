@@ -1,0 +1,3 @@
+A wiki root that is declared and not written yet. Deliberately holds no pages:
+`wiki.empty` is the warning that lets a project commit its intent before it has
+anything to describe, and this directory is what that case is measured against.

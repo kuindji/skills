@@ -9,14 +9,69 @@ Ids are `<stage><n>`, stages following the build order in the design spec.
 
 ## Todo
 
-- [ ] `P5-01` Write this repo's `docs/wiki/`
 - [ ] `P5-02` Acceptance: `project-validate` exits 0 on this repo
+- [ ] `P5-03` Ship the design spec: `folded_into`, then `docs-freeze`
+      The spec is still `draft` while the build it describes is finished, so
+      the one document in this repo that the lifecycle class exists for has
+      never been through the transition it was written to gate. Shipping it is
+      also the only way `docs-freeze` and the fold gate get exercised here on a
+      real document rather than on a fixture.
 
 ## In progress
 
 ## Blocked
 
 ## Done
+
+- [x] `P5-01` Write this repo's `docs/wiki/`
+      evidence: `bun test` — 599 pass, 0 fail; `bun run type-check` clean;
+      `bun run validate` reports `no problems` over 11 pages and 5 documents,
+      where before this task it carried the standing `wiki.empty` warning;
+      `bun run skills/bin/wiki-drift.ts` — 11 pages read, 114 files searched,
+      0 queued, 11 traced and unchanged.
+      Eleven pages and a principles file. A README, five top-level pages for
+      the profile, the validators, the skills, drift and testing, and four
+      children where one page would have answered two questions. The wiki is
+      about this package as a piece of software, for a reader who will change
+      it: what each module is for and why it is shaped that way. It does not
+      restate the doctrine, which holds why the rules exist, and it does not
+      restate the design spec, which is frozen at its date and holds what was
+      decided and what was rejected.
+      The drift line is the one to read. Every page traced, none surfaced on
+      age, which means every page carries names that still resolve to files in
+      this repository. That is the claim the `wiki-drift` half of the system
+      rests on, and it had never been made against a real wiki before.
+      `path_citations: forbidden` is the constraint that did the most work. No
+      page may name a file by a path carrying a code extension, so the profile
+      is "the profile", the tracker is "the file the profile names", and every
+      module is named by its exported functions instead. 0 path references
+      across 11 pages. Writing under the rule is what showed it is livable:
+      the ban costs a sentence per page and buys the tracing above, because a
+      page that cites positions has nothing greppable on it.
+      Two faults, both tests, and both found by going red the moment the wiki
+      existed. `wiki.empty` was measured against this repository's own wiki
+      root, so the test asserting that an empty root warns was asserting a
+      property of a directory rather than of the rule, and it stopped testing
+      anything the day the directory was filled. It now points at a fixture
+      that is empty on purpose and says so in the file that keeps it, and a
+      second test covers the absent-root case that shares the diagnostic. The
+      profile dogfood test had the same shape from the other side: it proved
+      the declared wiki root exists by asking for the `.gitkeep` that was
+      holding the empty directory in git, so deleting the placeholder the wiki
+      had made pointless broke it. It now loads the root and asserts it holds
+      pages, which is what the test was always for. All three were verified red
+      by removing the thing each one names.
+      This repo now owns a `wiki-principles` file at the wiki root, which is
+      the project-local half the skill reads before writing: the voice, the one
+      style profile this wiki runs, the canonical vocabulary, and the sections
+      each kind of page carries. It is the first exercise of the branch that
+      keeps that file out of the graph.
+      folded into: the wiki itself is the deliverable, so nothing was folded
+      into an existing page. The design spec's own fold is `P5-03`.
+      follow-up: `P5-03` filed. `P5-02` stays open on purpose: the umbrella
+      exits 0 as of this task, and the gate the spec describes is wider than
+      the exit code, since it also asks that all four skills have been
+      exercised here and `housekeeping` has not been run as a sweep yet.
 
 - [x] `P4-01` `housekeeping` SKILL.md and the sweep
       evidence: bun test — 598 pass, 51 of them new and every one written to

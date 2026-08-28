@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { loadWikiPages } from "../wiki/scan";
 import { parseProfile } from "./parse";
 
 /**
@@ -35,13 +36,16 @@ describe("this repo's own profile", () => {
         expect(profile?.wiki?.pathCitations).toBe("forbidden");
     });
 
-    test("declares a wiki root that exists, even though it is empty", async () => {
+    // This asked for the `.gitkeep` that was how an empty wiki root stayed in
+    // the repository at all. The root holds pages now, so the check is the one
+    // it always meant: a declared root resolving to nothing is the shape a
+    // repository teaching this system by example must not be in.
+    test("declares a wiki root that exists and holds pages", async () => {
         const source = await Bun.file(file).text();
         const { profile } = parseProfile(source, file);
-        const root = new URL(
-            `../../../${profile?.wiki?.root}`,
-            import.meta.url,
-        ).pathname;
-        expect(await Bun.file(`${root}/.gitkeep`).exists()).toBe(true);
+        const repoRoot = new URL("../../../", import.meta.url).pathname;
+        const pages = await loadWikiPages(profile!, repoRoot);
+        expect(pages.length).toBeGreaterThan(0);
+        expect(pages.map((page) => page.slug)).toContain("README");
     });
 });
