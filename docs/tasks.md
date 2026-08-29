@@ -31,39 +31,39 @@ housekeeping sweeps and what they turn up.
 
 ## Done
 
-- [x] `H-07` Repair defects found by the Vigilocity adoption
-      evidence: skills commit `15c4a42` is on `origin/main`; Vigilocity commit
+- [x] `H-07` Repair defects found by the operations-repo adoption
+      evidence: skills commit `15c4a42` is on `origin/main`; the operations repo commit
       `92d4cec5` is on
       `origin/task/test-project-skills-implementation`; `bun test` — 615 pass,
       0 fail; `bun run type-check`; `bun run format`; `bun run validate` — no
-      problems; Vigilocity `bun install --frozen-lockfile`; installed `bunx
+      problems; the operations repo `bun install --frozen-lockfile`; installed `bunx
       project-validate --json` — 0 errors and 3 size-target warnings; `bunx
       wiki-drift --json` — 0 of 35 pages queued; `bunx guard-generated --json`
       — 0 errors and 0 warnings across 64 changed paths.
       The package now ignores deleted worktree paths while listing repository
       files, so an unstaged rename cannot crash validation. The adoption guide
-      now requires a commit SHA, and Vigilocity pins the published fix. Local,
+      now requires a commit SHA, and the operations repo pins the published fix. Local,
       tracking and remote SHAs matched for both published commits. No deploy,
       AWS operation or database mutation ran.
       folded into: `adoption`.
 
 - [x] `H-06` Publish dead-selector enforcement to the commerce consumer
-      evidence: skills commit `bd8dc75` is on `origin/main`; TheFloorr commit
+      evidence: skills commit `bd8dc75` is on `origin/main`; the commerce repo commit
       `e5445126b` is on
       `origin/task/develop-team-project-management-skills`; `bun test` — 614
       pass, 0 fail; `bun run type-check`; `bun run format`; `bun run validate`
-      — no problems; TheFloorr `bun install --frozen-lockfile`; installed
+      — no problems; the commerce repo `bun install --frozen-lockfile`; installed
       `bunx project-validate --json` — 0 errors; installed-package injection —
       missing literal error and empty wildcard warning; `bunx guard-generated
       --json` — 0 errors and 0 warnings.
-      Published `H-05`, pinned TheFloorr's manifest and lockfile to that exact
+      Published `H-05`, pinned the commerce repo's manifest and lockfile to that exact
       skills commit, and published the consumer branch. Both remote branches
       were read back at the expected SHAs.
 
 - [x] `H-05` Missing literal document selectors do not fail validation
       evidence: `bun test` — 614 pass, 0 fail; `bun run type-check`; `bun run
-      format`; `bun run validate` — no problems; TheFloorr's real profile under
-      the local validator — 0 errors; an in-memory TheFloorr profile with
+      format`; `bun run validate` — no problems; the commerce repo's real profile under
+      the local validator — 0 errors; an in-memory profile for the commerce repo with
       `missing-singleton.md` and `empty-family/*.md` — error and warning,
       respectively.
       `classifyDocPaths` now distinguishes one promised path from a wildcard
@@ -74,11 +74,11 @@ housekeeping sweeps and what they turn up.
       outside this change unless separately requested.
 
 - [x] `A-02` Adopt in the commerce repo
-      evidence: skills commit `229a326` is on `origin/main`; TheFloorr commit
+      evidence: skills commit `229a326` is on `origin/main`; the commerce repo commit
       `9370f35f8` is on
       `origin/task/develop-team-project-management-skills`; `bun test` — 610
       pass, 0 fail; `bun run type-check`; `bun run format`; `bun run validate`
-      — no problems; TheFloorr `bun install --frozen-lockfile`; `bunx
+      — no problems; the commerce repo `bun install --frozen-lockfile`; `bunx
       project-validate --json` — 0 errors; legacy wiki validation — 0 errors;
       focused wiki tests — 10 pass, 0 fail; `bunx guard-generated --json` — 0
       errors and 0 warnings.
