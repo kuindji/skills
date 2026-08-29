@@ -50,14 +50,15 @@ choice and the hardest to change later. The reasoning is in
 | `assets`     | anything that is not prose        | free                  | no                                     | no     |
 | `ignored`    | deliberate exclusions             | free                  | no                                     | no     |
 
-Every file under the docs root matches exactly one. No match is an error, two
-matches are an error, and a glob that matches nothing is a warning worth acting
-on because it reads as coverage and provides none. Three things under the root
-are exempt and need no class: the wiki root, which answers to `wiki-validate`
-instead, a `project-profile.yaml`, which is configuration, and a file a nearer
-profile already classified. A glob written with a leading `/` is
-repo-root-relative, which is how a front-door `README.md` gets a class without
-moving under the docs root.
+Every file under the docs root matches exactly one. No match is an error, and
+two matches are an error. An exact path matching nothing is also an error. It
+promises one document and that document is gone. A wildcard matching nothing
+is a warning because it names a family that may legitimately be empty. Three
+things under the root are exempt and need no class: the wiki root, which answers
+to `wiki-validate` instead, a `project-profile.yaml`, which is configuration,
+and a file a nearer profile already classified. A selector written with a
+leading `/` is repo-root-relative, which is how a front-door `README.md` gets a
+class without moving under the docs root.
 
 The choice that actually costs something is `lifecycle` against the rest. A
 document belongs in `lifecycle` when it records a moment and then stops being

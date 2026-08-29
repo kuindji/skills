@@ -27,9 +27,28 @@ housekeeping sweeps and what they turn up.
 
 ## In progress
 
+- [ ] `H-06` Publish dead-selector enforcement to the commerce consumer
+      Commit and push `H-05`, repin TheFloorr's skills dependency and lockfile
+      to that published commit, rerun the consumer validation through the
+      installed package, and publish the consumer branch. Leave both worktrees
+      clean with local and remote SHAs equal.
+
 ## Blocked
 
 ## Done
+
+- [x] `H-05` Missing literal document selectors do not fail validation
+      evidence: `bun test` — 614 pass, 0 fail; `bun run type-check`; `bun run
+      format`; `bun run validate` — no problems; TheFloorr's real profile under
+      the local validator — 0 errors; an in-memory TheFloorr profile with
+      `missing-singleton.md` and `empty-family/*.md` — error and warning,
+      respectively.
+      `classifyDocPaths` now distinguishes one promised path from a wildcard
+      family using Bun's escape-aware glob syntax. Missing literal selectors
+      fail validation; empty wildcard families remain warnings. The doctrine,
+      profile template, project-docs skill, and self-hosted document-classes
+      page carry the same rule. Publishing and repinning consumers remain
+      outside this change unless separately requested.
 
 - [x] `A-02` Adopt in the commerce repo
       evidence: skills commit `229a326` is on `origin/main`; TheFloorr commit

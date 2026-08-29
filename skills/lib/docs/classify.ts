@@ -20,10 +20,10 @@ export interface ClassifyResult {
 
 export interface ClassifyOptions {
     /**
-     * Report declared globs that matched nothing.
+     * Report declared selectors that matched nothing.
      *
      * Only meaningful when the caller passed every file in the repo. A partial
-     * list would make most globs look dead.
+     * list would make most selectors look dead.
      */
     reportDeadGlobs?: boolean;
     /**
@@ -211,34 +211,58 @@ export function classifyDocPaths(
         checkTrackerPlacement(profile, path, docClass, diagnostics);
     }
 
-    // A glob that matches nothing looks like coverage and provides none. This
-    // repo shipped `live: ["README.md"]`, which resolved under the docs root
-    // and so matched no file at all, while reading as though the README were
-    // covered.
+    // A selector that matches nothing looks like coverage and provides none.
+    // An exact path is a broken promise about one document, so it is an error.
+    // A wildcard names a family that may legitimately be empty, so it remains
+    // a warning. This repo once shipped `live: ["README.md"]`, which resolved
+    // under the docs root and matched no file while reading as though the
+    // repository front door were covered.
     if (options.reportDeadGlobs) {
         for (const docClass of DOC_CLASSES) {
             for (const pattern of docs.globs[docClass]) {
                 if (matchedGlobs.has(`${docClass}:${pattern}`)) {
                     continue;
                 }
+                const wildcard = hasGlobSyntax(pattern);
                 diagnostics.push({
                     file,
                     keyPath: `docs.${docClass}`,
                     rule: "docs.deadGlob",
-                    message:
-                        `The \`${docClass}\` glob \`${pattern}\` matches no `
-                        + "file.",
+                    message: wildcard
+                        ? `The \`${docClass}\` glob \`${pattern}\` matches no `
+                            + "file."
+                        : `The \`${docClass}\` path \`${pattern}\` names no file.`,
                     remedy:
-                        "Remove it, or correct it. Globs resolve relative to "
+                        "Remove it, or correct it. Selectors resolve relative to "
                         + `the docs root (${describeRoot(docs.root)}); prefix `
                         + "with `/` to match from the repo root instead.",
-                    severity: "warning",
+                    severity: wildcard ? "warning" : "error",
                 });
             }
         }
     }
 
     return { files, diagnostics };
+}
+
+/** Whether a document selector uses Bun.Glob syntax rather than one path. */
+function hasGlobSyntax(pattern: string): boolean {
+    const target = pattern.startsWith("/") ? pattern.slice(1) : pattern;
+    for (let index = 0; index < target.length; index++) {
+        const character = target[index];
+        if (character === "\\") {
+            // Bun treats the next character literally, including glob syntax.
+            index++;
+            continue;
+        }
+        if (
+            character === "*" || character === "?" || character === "["
+            || character === "{" || (character === "!" && index === 0)
+        ) {
+            return true;
+        }
+    }
+    return false;
 }
 
 /**

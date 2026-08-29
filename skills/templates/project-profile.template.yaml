@@ -106,7 +106,8 @@ generated_paths: []
 #
 # Globs are relative to `root`. A leading `/` makes one repo-root-relative,
 # which is how a front-door `README.md` gets a class without being moved under
-# `docs/`.
+# `docs/`. A literal path that names no file is an error. A wildcard that
+# matches no file is a warning because the family may legitimately be empty.
 docs:
   root: docs
   # Specs and plans. The only date-named class, frozen on shipping, and the

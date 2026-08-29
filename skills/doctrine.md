@@ -187,6 +187,11 @@ would otherwise escape naming, freezing and the fold gate together. Matching two
 classes is also an error, since a file that is both `reference` and `lifecycle`
 has no answer to what its rules are.
 
+A declared exact path must name a file. If it does not, validation fails because
+the profile promises one specific document that is gone. A wildcard may match
+nothing without being broken. It describes a family that can be empty, so that
+case is a warning rather than an error.
+
 Three things under a docs root are exempt, and each for a reason worth knowing.
 Anything under the declared wiki root, because that root often sits inside the
 docs root and its pages answer to `wiki-validate` instead. A

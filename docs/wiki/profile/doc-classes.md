@@ -3,27 +3,33 @@ title: Document classes
 parents: [profile]
 children: []
 related_pages: [validators/docs-checks]
-last_updated: 2026-08-28
+last_updated: 2026-08-29
 ---
 
-A document's rules follow its class, and a class is a glob somebody wrote down
-rather than a place a file sits. `DOC_CLASSES` names the seven: `lifecycle` for
-specs and plans, `live` for READMEs and roadmaps, `tracker` for the in-repo
-backend, `checklists` for append-only evidence, `reference` for material dated
-by its own content, `assets` for what is not validated, and `ignored`, which is
-a class rather than an exemption so that a deliberate exclusion is a line
-somebody wrote instead of a silence.
+A document's rules follow its class, and a class is a selector somebody wrote
+down rather than a place a file sits. `DOC_CLASSES` names the seven:
+`lifecycle` for specs and plans, `live` for READMEs and roadmaps, `tracker` for
+the in-repo backend, `checklists` for append-only evidence, `reference` for
+material dated by its own content, `assets` for what is not validated, and
+`ignored`, which is a class rather than an exemption so that a deliberate
+exclusion is a line somebody wrote instead of a silence.
 
 `classifyDocPaths` matches every file under the documents root against the
-declared globs. **Exactly one class, always.** No match is an error, because a
-stray dated plan landing outside the declared globs would otherwise escape
-naming, freezing and the fold gate together. Two matches are an error as well,
-since a file that is both `reference` and `lifecycle` has no answer to what its
-rules are.
+declared selectors. **Exactly one class, always.** No match is an error,
+because a stray dated plan landing outside the declared globs would otherwise
+escape naming, freezing and the fold gate together. Two matches are an error
+as well, since a file that is both `reference` and `lifecycle` has no answer to
+what its rules are.
 
-A glob resolves against the documents root. A leading slash makes it
+A selector resolves against the documents root. A leading slash makes it
 repository-root-relative instead, which is how a front-door README gets a class
 without being moved under the documents directory.
+
+`classifyDocPaths` also checks the selectors in the other direction. A literal
+path that names no file is an error because it promises one specific document.
+A wildcard that matches no file is a warning because it describes a family
+that may legitimately be empty. The distinction follows the wildcard syntax
+understood by `Bun.Glob`, including escaped special characters.
 
 Three things under a documents root are exempt, each for its own reason.
 Anything under the declared wiki root, whose pages answer to `wiki-validate`

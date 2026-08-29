@@ -286,16 +286,112 @@ describe("no docs configured", () => {
 });
 
 describe("dead globs", () => {
-    test("a glob matching nothing is a warning when the scan is complete", () => {
-        const result = classifyDocPaths(STANDARD, [ "docs/README.md" ], {
+    test("a literal selector matching nothing is an error", () => {
+        const exact = profileFrom(`
+tracker:
+  backend: clickup
+docs:
+  root: docs
+  reference: ["MONEY_FLOW_REVIEW.md"]
+`);
+        const result = classifyDocPaths(exact, [], {
+            reportDeadGlobs: true,
+        });
+        const dead = result.diagnostics.find(
+            (d) => d.rule === "docs.deadGlob",
+        );
+        expect(dead?.severity).toBe("error");
+        expect(dead?.message).toContain("path");
+        expect(dead?.message).toContain("MONEY_FLOW_REVIEW.md");
+    });
+
+    test("a root-relative literal selector matching nothing is an error", () => {
+        const exact = profileFrom(`
+tracker:
+  backend: clickup
+docs:
+  root: docs
+  live: ["/AGENTS.md"]
+`);
+        const result = classifyDocPaths(exact, [], {
+            reportDeadGlobs: true,
+        });
+        const dead = result.diagnostics.find(
+            (d) => d.rule === "docs.deadGlob",
+        );
+        expect(dead?.severity).toBe("error");
+    });
+
+    test("a wildcard selector matching nothing is a warning", () => {
+        const wildcard = profileFrom(`
+tracker:
+  backend: clickup
+docs:
+  root: docs
+  reference: ["reports/*.md"]
+`);
+        const result = classifyDocPaths(wildcard, [], {
             reportDeadGlobs: true,
         });
         const dead = result.diagnostics.filter(
             (d) => d.rule === "docs.deadGlob",
         );
-        expect(dead.length).toBeGreaterThan(0);
+        expect(dead).toHaveLength(1);
         expect(dead[0]?.severity).toBe("warning");
         expect(dead[0]?.remedy).toContain("docs");
+    });
+
+    test("every supported wildcard form remains a warning", () => {
+        for (
+            const pattern of [
+                "plans/*.md",
+                "plans/**/*.md",
+                "plans/?.md",
+                "plans/[0-9].md",
+                "plans/{active,shipped}.md",
+                "!plans/private.md",
+            ]
+        ) {
+            const wildcard = profileFrom(`
+tracker:
+  backend: clickup
+docs:
+  root: docs
+  reference: ["${pattern}"]
+`);
+            const result = classifyDocPaths(wildcard, [], {
+                reportDeadGlobs: true,
+            });
+            const dead = result.diagnostics.find(
+                (d) => d.rule === "docs.deadGlob",
+            );
+            expect(dead?.severity).toBe("warning");
+        }
+    });
+
+    test("escaped glob syntax still names one literal path", () => {
+        for (
+            const pattern of [
+                "report\\*.md",
+                "report\\?.md",
+                "\\!README.md",
+            ]
+        ) {
+            const exact = profileFrom(`
+tracker:
+  backend: clickup
+docs:
+  root: docs
+  reference: ['${pattern}']
+`);
+            const result = classifyDocPaths(exact, [], {
+                reportDeadGlobs: true,
+            });
+            const dead = result.diagnostics.find(
+                (d) => d.rule === "docs.deadGlob",
+            );
+            expect(dead?.severity).toBe("error");
+        }
     });
 
     test("dead globs are not reported for a partial path list", () => {
