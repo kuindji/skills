@@ -76,6 +76,38 @@ describe("line numbers", () => {
     test("a time of day is not a line reference", () => {
         expect(rules("The job runs at 09:30 every day.\n")).toEqual([]);
     });
+
+    test("a standalone line reference is an error", () => {
+        const found = check("`createInvoice` writes the row (line 90).\n");
+        expect(found.diagnostics).toHaveLength(1);
+        expect(found.diagnostics[0]!.rule).toBe("wiki.lineNumber");
+        expect(found.diagnostics[0]!.message).toContain("`line 90`");
+        expect(found.pathCitations).toBe(0);
+    });
+
+    test("a standalone line range is named whole", () => {
+        const found = check("The pool is declared on lines 331-347.\n");
+        expect(found.diagnostics).toHaveLength(1);
+        expect(found.diagnostics[0]!.message).toContain("`lines 331-347`");
+    });
+
+    test("an inline shorthand range is an error", () => {
+        const found = check("See the earlier handler and `:233-244`.\n");
+        expect(found.diagnostics).toHaveLength(1);
+        expect(found.diagnostics[0]!.message).toContain("`:233-244`");
+    });
+
+    test("a quantity of lines is not a position", () => {
+        expect(rules("The parser is 40 lines long.\n")).toEqual([]);
+        expect(rules("The parser appears 40 lines later.\n")).toEqual([]);
+    });
+
+    test("a time and a port are not shorthand line references", () => {
+        expect(rules("The job runs at 09:30.\n")).toEqual([]);
+        expect(rules("Open `localhost:3000`.\n")).toEqual([]);
+        expect(rules("Allow the IPv6 loopback `[::1]`.\n")).toEqual([]);
+        expect(rules('The body is `"code":9001`.\n')).toEqual([]);
+    });
 });
 
 describe("path citations", () => {

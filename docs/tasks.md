@@ -28,42 +28,16 @@ housekeeping sweeps and what they turn up.
 ## In progress
 
 - [ ] `A-02` Adopt in the commerce repo
-      Taken before `A-01` because the repository was the one made available. The
-      wiki validator's real trial: 152 pages, two wiki profiles, an external
-      tracker, mature mode, and the line-number worklist the spec measured at 19
-      pages and 193 occurrences, which came in at 21 pages and 200.
-      evidence: `bunx project-validate` in the consuming repository, run from
-      the installed package rather than from here: 0 errors, 74 warnings, exit
-      0. `bun cli/wiki/validate-wiki.ts`, the repository's own validator, still
-      exits 0 over the same 152 pages, and its two test files that import
-      `validateWiki` pass.
-      Held here rather than Done because the change is uncommitted in that
-      repository and has not been read by its owner. What is settled is that the
-      schema fit: a profile written from the template classified all 148
-      documents with no `docs.unclassified` and no ambiguity, and the wiki's
-      graph rules, frontmatter, edge symmetry, reachability and business-subtree
-      containment, passed on the first run with zero errors. The design was
-      taken from this repository and it still had to survive being read back at
-      it by a tool.
-      What it cost the repository: 200 line-number citations stripped from 21
-      pages, 45 lifecycle documents given a `type` and `status` block they had
-      never carried, one plan renamed to its date, `docs/wiki/PRINCIPLES.md`
-      reduced to the half a validator cannot check, and the code rules moved out
-      of `CLAUDE.md` into a `docs/house-rules.md` the profile points at.
-      What it cost this package: `wiki.lineNumber` matched only the first number
-      of a comma list, so `foo.ts:36,41` was named in the diagnostic as
-      `foo.ts:36`, and its remedy applied to what was named left `foo.ts,41`
-      behind. The leftover carries no colon, so nothing catches it afterwards:
-      following the tool's own instruction produced text the tool then called
-      clean, on 59 citations in that repository. Fixed here, red test first.
-      evidence: `bun test skills/lib/wiki/prose.test.ts` — the new
-      "a list of lines is named whole" fails on the old regex with
-      `Received: "\`src/wiki.ts:101\` cites a line number."`and passes on the
-      new one;`bun test`— 602 pass, 0 fail.
-      open: whether the repository's own`cli/wiki/validate-wiki.ts`stays. Two
-      validators over one wiki is two authorities, and this one is imported by
-      two test files under`serverless/api/ai-assistant/tests/`, so removing it
-      is a code change rather than a deletion. Its owner's call.
+      Reset the reviewed test adoption to `923d682`, repair the validator gaps
+      it exposed, and rerun the adoption from a clean worktree. The package
+      must reject standalone `line` and `lines` positions in wiki prose and a
+      ClickUp or Linear product with no `tracker.project`. The commerce profile
+      must classify the dated MCP spike report as reference material, name its
+      ClickUp list, and leave no half-staged rename. Revalidate both
+      repositories, then perform a fresh Level 1 review of the corrected diff.
+      This task does not remove the commerce repository's legacy wiki validator
+      or redesign `wiki-drift` ranking. Those are separate changes with wider
+      integration consequences.
 
 ## Blocked
 

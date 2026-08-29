@@ -54,8 +54,9 @@ tracker:
   # classified as what it is. A tracker no doc class matches is a tracker
   # nothing checks, and that reports as `docs.trackerUnchecked`.
   file: docs/tasks.md
-  # The board or list this repository's tasks live in, under an external
-  # backend. In a multi-product repository this moves to each product profile.
+  # Required for ClickUp or Linear: the board, list, team, or project this
+  # repository's tasks live in. In a multi-product repository this moves to
+  # each product profile, where every product must name its own destination.
   # project: platform
 
 # --- taskflow ----------------------------------------------------------------

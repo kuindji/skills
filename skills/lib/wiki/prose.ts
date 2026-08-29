@@ -122,6 +122,14 @@ const LINE_REF_RE = new RegExp(
     `${PATH_SOURCE}:${LINE_RANGE}(?:,${LINE_RANGE})*`,
     "g",
 );
+const STANDALONE_LINE_REF_RE = new RegExp(
+    String.raw`\blines?\s+${LINE_RANGE}(?:\s*,\s*${LINE_RANGE})*`,
+    "gi",
+);
+const INLINE_LINE_SHORTHAND_RE = new RegExp(
+    String.raw`(?<!\`)\`(:${LINE_RANGE}(?:,${LINE_RANGE})*)\`(?!\`)`,
+    "g",
+);
 const PATH_RE = new RegExp(PATH_SOURCE, "g");
 
 /**
@@ -251,6 +259,47 @@ function checkPage(
                         + "number is wrong after the next edit to the file, "
                         + "cannot be grepped back to what it meant, and says "
                         + "nothing the path did not already say.",
+                severity: "error",
+            });
+        }
+
+        // A named function followed by `(line 90)` is still written in a
+        // position even though no file path carries the number. Match the
+        // word before the number so quantities such as `40 lines later` do
+        // not become citations. These do not increment `pathCitations`: the
+        // report counts file paths, and this form contains none.
+        for (const match of text.matchAll(STANDALONE_LINE_REF_RE)) {
+            out.push({
+                file: page.path,
+                keyPath: "",
+                line,
+                rule: "wiki.lineNumber",
+                message: `\`${match[0]}\` cites a line number.`,
+                remedy:
+                    "Remove the line reference and keep the stable name: the "
+                    + "function, table, route, event, or environment variable. "
+                    + "A line number is wrong after the next edit and cannot "
+                    + "be grepped back to what it meant.",
+                severity: "error",
+            });
+        }
+
+        // A later reference sometimes abbreviates an already-named path to
+        // `:233-244`. Match only a whole inline-code span. That excludes an
+        // IPv6 address, a JSON value such as `"code":9001`, a time, and a
+        // port without guessing what the surrounding sentence means.
+        for (const match of text.matchAll(INLINE_LINE_SHORTHAND_RE)) {
+            const shorthand = match[1] ?? match[0];
+            out.push({
+                file: page.path,
+                keyPath: "",
+                line,
+                rule: "wiki.lineNumber",
+                message: `\`${shorthand}\` cites a line number.`,
+                remedy:
+                    "Remove the shorthand and keep the stable name it refers "
+                    + "to. A line number is wrong after the next edit and "
+                    + "cannot be grepped back to what it meant.",
                 severity: "error",
             });
         }

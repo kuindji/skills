@@ -105,12 +105,12 @@ contract shape, and bare dates are all allowed. They were measured against real
 wikis before the rule was written, and banning them would have hit the pages
 that document interfaces most carefully.
 
-| Pattern                                             | Severity                                  |
-| --------------------------------------------------- | ----------------------------------------- |
-| line numbers and ranges (`file.ts:101-110`)         | error                                     |
-| directory trees in prose                            | error                                     |
-| file paths with a code extension                    | `wiki.path_citations`, default `citation` |
-| snapshot markers (`currently`, `recently`, `as of`) | warn                                      |
+| Pattern                                                      | Severity                                  |
+| ------------------------------------------------------------ | ----------------------------------------- |
+| line numbers and ranges (`file.ts:101-110`, `lines 101-110`) | error                                     |
+| directory trees in prose                                     | error                                     |
+| file paths with a code extension                             | `wiki.path_citations`, default `citation` |
+| snapshot markers (`currently`, `recently`, `as of`)          | warn                                      |
 
 `wiki.path_citations` is the one rule in this system whose policy a project
 sets, because two live projects hold opposite positions on file-path citations

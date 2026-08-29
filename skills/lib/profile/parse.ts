@@ -65,6 +65,12 @@ export interface ParseOptions {
      * lives got the wrong answer for that product, silently.
      */
     inherit?: { trackerBackend?: TrackerBackend; trackerFile?: string; };
+    /**
+     * Whether this profile represents a product that must name its board or
+     * list. The loader decides this after it knows whether the root is the
+     * sole product or a repository-level profile above product profiles.
+     */
+    requireTrackerProject?: boolean;
 }
 
 export interface ParseResult {
@@ -261,6 +267,22 @@ export function parseProfile(
             "An in-repo tracker does not name the file that holds task state.",
             "Set tracker.file to the markdown file that is the tracker, for "
                 + "example `docs/tasks.md`.",
+        );
+    }
+
+    if (
+        options.requireTrackerProject === true
+        && (profile.tracker.backend === "clickup"
+            || profile.tracker.backend === "linear")
+        && !profile.tracker.project
+    ) {
+        add(
+            "tracker.backend",
+            "tracker.project",
+            `The ${profile.tracker.backend} tracker does not name the board `
+                + "or list that holds this product's tasks.",
+            "Set tracker.project to the ClickUp list URL or Linear team or "
+                + "project used for this product.",
         );
     }
 

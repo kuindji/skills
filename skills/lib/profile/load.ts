@@ -76,14 +76,18 @@ export async function loadProfiles(
         };
     }
 
-    const rootResult = parseProfile(await rootFile.text(), PROFILE_FILENAME);
+    const { paths, boundaries } = await discover(repoRoot, diagnostics);
+    const rootResult = parseProfile(
+        await rootFile.text(),
+        PROFILE_FILENAME,
+        { requireTrackerProject: paths.length === 0 },
+    );
     diagnostics.push(...rootResult.diagnostics);
     const root = rootResult.profile;
     if (!root) {
         return { diagnostics, boundaries: [] };
     }
 
-    const { paths, boundaries } = await discover(repoRoot, diagnostics);
     const products: Profile[] = [];
     for (const path of paths) {
         const result = parseProfile(
@@ -99,6 +103,7 @@ export async function loadProfiles(
                     trackerBackend: root.tracker.backend,
                     trackerFile: root.tracker.file,
                 },
+                requireTrackerProject: true,
             },
         );
         diagnostics.push(...result.diagnostics);

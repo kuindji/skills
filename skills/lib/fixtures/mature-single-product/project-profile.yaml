@@ -12,6 +12,7 @@ wiki:
 
 tracker:
   backend: clickup
+  project: commerce
 
 taskflow:
   enabled: true

@@ -192,6 +192,47 @@ tracker:
         });
     });
 
+    test("a single-product ClickUp profile names its board or list", async () => {
+        await withRepo({
+            "project-profile.yaml": "tracker:\n  backend: clickup\n",
+        }, async (directory) => {
+            const result = await loadProfiles(directory);
+            const diagnostic = result.diagnostics.find(
+                (item) => item.rule === "tracker.project",
+            );
+            expect(diagnostic?.severity).toBe("error");
+            expect(diagnostic?.line).toBe(2);
+            expect(diagnostic?.remedy).toContain("tracker.project");
+        });
+    });
+
+    test("each product under ClickUp names its board or list", async () => {
+        await withRepo({
+            "project-profile.yaml": "tracker:\n  backend: clickup\n",
+            "docs/notes/project-profile.yaml":
+                "product: notes\npaths: [apps/notes]\n",
+        }, async (directory) => {
+            const result = await loadProfiles(directory);
+            const diagnostic = result.diagnostics.find(
+                (item) => item.rule === "tracker.project",
+            );
+            expect(diagnostic?.file).toBe(
+                "docs/notes/project-profile.yaml",
+            );
+        });
+    });
+
+    test("a multi-product external tracker accepts one project per product", async () => {
+        await withRepo({
+            "project-profile.yaml": "tracker:\n  backend: linear\n",
+            "docs/notes/project-profile.yaml":
+                "product: notes\npaths: [apps/notes]\ntracker:\n  project: Notes\n",
+        }, async (directory) => {
+            const result = await loadProfiles(directory);
+            expect(result.diagnostics).toEqual([]);
+        });
+    });
+
     test("a product declaring its own backend is refused", async () => {
         await withRepo({
             "project-profile.yaml": ROOT,
