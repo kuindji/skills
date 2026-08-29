@@ -27,15 +27,22 @@ housekeeping sweeps and what they turn up.
 
 ## In progress
 
-- [ ] `H-06` Publish dead-selector enforcement to the commerce consumer
-      Commit and push `H-05`, repin TheFloorr's skills dependency and lockfile
-      to that published commit, rerun the consumer validation through the
-      installed package, and publish the consumer branch. Leave both worktrees
-      clean with local and remote SHAs equal.
-
 ## Blocked
 
 ## Done
+
+- [x] `H-06` Publish dead-selector enforcement to the commerce consumer
+      evidence: skills commit `bd8dc75` is on `origin/main`; TheFloorr commit
+      `e5445126b` is on
+      `origin/task/develop-team-project-management-skills`; `bun test` — 614
+      pass, 0 fail; `bun run type-check`; `bun run format`; `bun run validate`
+      — no problems; TheFloorr `bun install --frozen-lockfile`; installed
+      `bunx project-validate --json` — 0 errors; installed-package injection —
+      missing literal error and empty wildcard warning; `bunx guard-generated
+      --json` — 0 errors and 0 warnings.
+      Published `H-05`, pinned TheFloorr's manifest and lockfile to that exact
+      skills commit, and published the consumer branch. Both remote branches
+      were read back at the expected SHAs.
 
 - [x] `H-05` Missing literal document selectors do not fail validation
       evidence: `bun test` — 614 pass, 0 fail; `bun run type-check`; `bun run
