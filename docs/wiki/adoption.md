@@ -3,12 +3,12 @@ title: Adopting the package
 parents: [README]
 children: []
 related_pages: []
-last_updated: 2026-08-28
+last_updated: 2026-08-29
 ---
 
 Nothing here goes to a registry. A consuming repository takes
 `@kuindji/project-skills` as a bun development dependency by git URL, pinned to
-a tag, so an upgrade is an
+an immutable commit SHA, so an upgrade is an
 edit somebody made rather than whatever the default branch held on the morning
 they installed. The manifest ships the source root alone, so what arrives is
 the four skills, the doctrine they link into, the templates, the library and

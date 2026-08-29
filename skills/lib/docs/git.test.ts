@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, rename, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { daysSince, isShallowRepository, lastCommitDates } from "./git";
@@ -177,6 +177,20 @@ describe("shallow clones", () => {
         finally {
             await rm(scratch, { recursive: true, force: true });
         }
+    });
+});
+
+describe("repository file listing", () => {
+    test("an unstaged rename lists only the path present in the worktree", async () => {
+        await withRepo(async (root) => {
+            await writeFile(join(root, "old.md"), "body\n");
+            await git(root, "add", "-A");
+            await git(root, "commit", "-qm", "one");
+
+            await rename(join(root, "old.md"), join(root, "new.md"));
+
+            expect(await listRepoFiles(root)).toEqual([ "new.md" ]);
+        });
     });
 });
 

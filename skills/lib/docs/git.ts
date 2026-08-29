@@ -115,9 +115,12 @@ export async function isShallowRepository(repoRoot: string): Promise<boolean> {
 /**
  * List the repo's files as git sees them.
  *
- * Tracked files plus untracked ones that are not ignored. A raw directory walk
- * would classify node_modules and build output; asking git means the validator
- * sees exactly what a reviewer would.
+ * Tracked files that still exist in the worktree, plus untracked ones that are
+ * not ignored. A raw directory walk would classify node_modules and build
+ * output; asking git means the validator sees exactly what a reviewer would.
+ * The existence check removes unstaged deletions: `git ls-files --cached`
+ * continues to name the old side of a rename until it is staged, but a
+ * validator must judge the worktree before the commit exists.
  *
  * NUL-separated, because git's default output quotes and octal-escapes any
  * path outside ASCII: a file named `café.md` arrives as the literal
@@ -146,5 +149,11 @@ export async function listRepoFiles(repoRoot: string): Promise<string[]> {
             `git ls-files failed in ${repoRoot}: ${stderr.trim()}`,
         );
     }
-    return stdout.split("\0").filter((path) => path.length > 0);
+    const base = repoRoot.endsWith("/") ? repoRoot : `${repoRoot}/`;
+    const paths = stdout.split("\0").filter((path) => path.length > 0);
+    return (await Promise.all(
+        paths.map(async (path) =>
+            await Bun.file(`${base}${path}`).exists() ? path : undefined
+        ),
+    )).filter((path): path is string => path !== undefined);
 }
