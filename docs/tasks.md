@@ -27,21 +27,26 @@ housekeeping sweeps and what they turn up.
 
 ## In progress
 
-- [ ] `A-02` Adopt in the commerce repo
-      Reset the reviewed test adoption to `923d682`, repair the validator gaps
-      it exposed, and rerun the adoption from a clean worktree. The package
-      must reject standalone `line` and `lines` positions in wiki prose and a
-      ClickUp or Linear product with no `tracker.project`. The commerce profile
-      must classify the dated MCP spike report as reference material, name its
-      ClickUp list, and leave no half-staged rename. Revalidate both
-      repositories, then perform a fresh Level 1 review of the corrected diff.
-      This task does not remove the commerce repository's legacy wiki validator
-      or redesign `wiki-drift` ranking. Those are separate changes with wider
-      integration consequences.
-
 ## Blocked
 
 ## Done
+
+- [x] `A-02` Adopt in the commerce repo
+      evidence: skills commit `229a326` is on `origin/main`; TheFloorr commit
+      `9370f35f8` is on
+      `origin/task/develop-team-project-management-skills`; `bun test` — 610
+      pass, 0 fail; `bun run type-check`; `bun run format`; `bun run validate`
+      — no problems; TheFloorr `bun install --frozen-lockfile`; `bunx
+      project-validate --json` — 0 errors; legacy wiki validation — 0 errors;
+      focused wiki tests — 10 pass, 0 fail; `bunx guard-generated --json` — 0
+      errors and 0 warnings.
+      Reset the reviewed test adoption to `923d682`, repaired the standalone
+      line-position and external-tracker validation gaps it exposed, published
+      the package, and reran the adoption from a clean worktree. The commerce
+      profile names its ClickUp list, treats the dated MCP spike report as
+      reference material, and carries a complete Awin plan rename. Removal of
+      the legacy validator and changes to `wiki-drift` ranking remain outside
+      this task.
 
 - [x] `H-04` The front door narrated status it does not own
       evidence: `bun run validate` — no problems, exit 0; `bun run
