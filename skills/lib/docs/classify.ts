@@ -69,18 +69,25 @@ export function classifyDocPaths(
     // this repo. Declaring it against ClickUp suggests the author believed
     // task state lived here, which is the confusion the class exists to avoid.
     if (docs.globs.tracker.length > 0 && !trackerIsInRepo) {
+        const backend = profile.tracker.backend;
         diagnostics.push({
             file,
             keyPath: "docs.tracker",
             rule: "docs.trackerClass",
-            message:
-                "A `tracker` doc class is declared, but the tracker backend is "
-                + `\`${profile.tracker.backend}\`, which holds task state `
-                + "outside this repo.",
-            remedy:
-                "Remove the docs.tracker globs, or change tracker.backend to "
-                + `in-repo. With ${profile.tracker.backend}, a file in the repo `
-                + "carrying task state would be a second authority.",
+            message: backend === undefined
+                ? "A `tracker` doc class is declared, but this repository "
+                    + "declares no tracker."
+                : "A `tracker` doc class is declared, but the tracker backend "
+                    + `is \`${backend}\`, which holds task state outside this `
+                    + "repo.",
+            remedy: backend === undefined
+                ? "Remove the docs.tracker globs, or declare `tracker.backend` "
+                    + "in the profile. A file classified as the tracker in a "
+                    + "repository that has none is an authority nothing points "
+                    + "at."
+                : "Remove the docs.tracker globs, or change tracker.backend to "
+                    + `in-repo. With ${backend}, a file in the repo carrying `
+                    + "task state would be a second authority.",
             severity: "error",
         });
     }

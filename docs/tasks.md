@@ -31,6 +31,38 @@ housekeeping sweeps and what they turn up.
 
 ## Done
 
+- [x] `P6-01` Tracking becomes opt-in, and `todo-tray` replaces `taskflow` as a backend
+      evidence: `bun test` — 625 pass, 0 fail across 34 files; `bun run
+      type-check`; `bun run format`; `bun run validate` — no problems, 2 nested
+      repositories still skipped as boundaries. Six scratch fixtures cover the
+      schema: no `tracker` block exits 0, which is the case that failed before
+      this work; `tracker: {}` reports `tracker.backend`; a bare `tracker:`
+      reports the new `tracker.shape`; `backend: todo-tray` with a project exits
+      0 and without one reports `tracker.project`; `backend: taskflow` now
+      reports `tracker.backend`. gpt-5.5 reviewed the plan twice and the diff
+      once, and found no blocking defects in the last pass.
+      The `tracker` block is now droppable, which removes the one exception to
+      this package's rule that absence is a configuration, and the three shapes
+      an author can write are told apart rather than collapsed. The skills stop
+      instructing an agent to write to a tracker unasked: that instruction now
+      comes from a task, from the repository's own `AGENTS.md`, or from a
+      Taskflow `tracker-ref`. Every rule that assumed a tracker exists gained
+      the case where none does, including the housekeeping sweep, which had no
+      way to date itself or file its report.
+      Two review findings were repairs to real defects rather than polish. The
+      parser initialised `tracker: { backend: "in-repo" }`, so making the block
+      optional without changing that line would have turned "no tracker" into
+      "in-repo tracker" silently. And `looksLikeRepositoryRoot` identified a
+      nested repository by its tracker, so tracker-less roots would have been
+      adopted as products of the outer repo; it now asks what a document claims
+      instead, and an unnamed profile carrying `paths` is still reported rather
+      than skipped.
+      No policy dial. How strict a repository is stays in its own `AGENTS.md`
+      and house rules, because no validator can observe whether an agent
+      volunteered a write, which is the doctrine's own test for what belongs in
+      the schema.
+      folded into: `profile`, `profile/doc-classes`, `skills`, `adoption`.
+
 - [x] `H-07` Repair defects found by the operations-repo adoption
       evidence: skills commit `15c4a42` is on `origin/main`; the operations repo commit
       `92d4cec5` is on

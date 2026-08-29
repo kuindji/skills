@@ -13,8 +13,18 @@ export type PathCitations = "forbidden" | "citation";
 /** Development mode for a path. Gates ceremony, not correctness. */
 export type Mode = "greenfield" | "mature";
 
-/** Where issue state lives. "in-repo" means a markdown file in this repo. */
-export type TrackerBackend = "clickup" | "linear" | "taskflow" | "in-repo";
+/**
+ * Where issue state lives. "in-repo" means a markdown file in this repo.
+ *
+ * Taskflow is deliberately not here. It is a consumer of this package and a
+ * local session tool: it holds the session, its worktree and its log, and no
+ * issue state. Its axis is the `taskflow` block, which is a different question.
+ */
+export type TrackerBackend =
+    | "clickup"
+    | "linear"
+    | "todo-tray"
+    | "in-repo";
 
 /** The doc classes a file under the docs root can belong to. */
 export const DOC_CLASSES = [
@@ -41,7 +51,12 @@ export interface WikiConfig {
 }
 
 export interface TrackerConfig {
-    backend: TrackerBackend;
+    /**
+     * Absent when the repository declares no tracker at all, which is a
+     * configuration rather than a gap: nothing then answers what is intended or
+     * whether it is done, and no tracking rule fires.
+     */
+    backend?: TrackerBackend;
     /** Project or board name inside an external tracker. */
     project?: string;
     /** Repo-relative markdown file. Required when backend is "in-repo". */

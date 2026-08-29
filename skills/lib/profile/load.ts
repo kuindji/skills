@@ -104,6 +104,9 @@ export async function loadProfiles(
                     trackerFile: root.tracker.file,
                 },
                 requireTrackerProject: true,
+                // Where the root tracks nothing, a product naming a board is
+                // pointing at a system this repository does not use.
+                rootDeclaresTracker: root.tracker.backend !== undefined,
             },
         );
         diagnostics.push(...result.diagnostics);

@@ -13,7 +13,7 @@ import {
 const TRACKER_BACKENDS: TrackerBackend[] = [
     "clickup",
     "linear",
-    "taskflow",
+    "todo-tray",
     "in-repo",
 ];
 const PATH_CITATIONS: PathCitations[] = [ "forbidden", "citation" ];
@@ -71,6 +71,16 @@ export interface ParseOptions {
      * sole product or a repository-level profile above product profiles.
      */
     requireTrackerProject?: boolean;
+    /**
+     * Whether the repository declares a tracker at all.
+     *
+     * A product names its board in `tracker.project`, and the backend that board
+     * lives in is the root's. Where the root declares no tracker, a product
+     * naming one is pointing at a system this repository does not use, and
+     * nothing downstream would ever read it. The loader knows the root's answer
+     * and a product profile cannot, which is why this arrives as an option.
+     */
+    rootDeclaresTracker?: boolean;
 }
 
 export interface ParseResult {
@@ -177,7 +187,11 @@ export function parseProfile(
         sourcePath: file,
         product: optionalString(raw.product),
         paths: stringList(raw.paths),
-        tracker: { backend: "in-repo" },
+        // No backend until one is declared. Defaulting to in-repo here would
+        // make a repository that named no tracker indistinguishable from one
+        // that named a file, and every in-repo rule would then run over a file
+        // that does not exist.
+        tracker: {},
         taskflow: { enabled: false },
         houseRules: optionalString(raw.house_rules),
         generatedPaths: stringList(raw.generated_paths),
@@ -187,7 +201,21 @@ export function parseProfile(
     };
 
     // --- tracker -----------------------------------------------------------
+    // Three shapes, three answers. Collapsing them is what made a repository
+    // that tracks nothing impossible to express: absence is a configuration,
+    // and a block half written is a mistake, and they are not the same thing.
+    const declaresTracker = Object.hasOwn(raw, "tracker");
     const tracker = isRecord(raw.tracker) ? raw.tracker : {};
+    if (declaresTracker && !isRecord(raw.tracker)) {
+        add(
+            "tracker",
+            "tracker.shape",
+            "`tracker` is declared but is not a mapping.",
+            "Give it a `backend`, or remove the key. A repository that tracks "
+                + "nothing leaves `tracker` out entirely, which is a "
+                + "configuration rather than a gap.",
+        );
+    }
     const backend = optionalString(tracker.backend);
     const inheritedBackend = options.inherit?.trackerBackend;
     if (inheritedBackend !== undefined) {
@@ -195,15 +223,17 @@ export function parseProfile(
     }
     if (backend === undefined) {
         // A product profile inherits the backend from the root profile. Only
-        // the root has to say where issue state lives.
-        if (kind === "root") {
+        // the root has to say where issue state lives, and only if it says
+        // that task state lives anywhere at all.
+        if (kind === "root" && isRecord(raw.tracker)) {
             add(
                 "tracker.backend",
                 "tracker.backend",
-                "No tracker backend is set.",
+                "`tracker` is declared but names no backend.",
                 `Set tracker.backend to one of: ${
                     TRACKER_BACKENDS.join(", ")
-                }.`,
+                }. To declare that this repository tracks nothing, remove the `
+                    + "`tracker` block instead of leaving it empty.",
             );
         }
     }
@@ -270,10 +300,14 @@ export function parseProfile(
         );
     }
 
+    // todo-tray needs the project code for the same reason ClickUp and Linear
+    // need the board: `todo-tray task list --project <code>` is how the work
+    // already recorded is found, and there is no default.
     if (
         options.requireTrackerProject === true
         && (profile.tracker.backend === "clickup"
-            || profile.tracker.backend === "linear")
+            || profile.tracker.backend === "linear"
+            || profile.tracker.backend === "todo-tray")
         && !profile.tracker.project
     ) {
         add(
@@ -281,8 +315,28 @@ export function parseProfile(
             "tracker.project",
             `The ${profile.tracker.backend} tracker does not name the board `
                 + "or list that holds this product's tasks.",
-            "Set tracker.project to the ClickUp list URL or Linear team or "
-                + "project used for this product.",
+            "Set tracker.project to the ClickUp list URL, the Linear team or "
+                + "project, or the todo-tray project code used for this "
+                + "product.",
+        );
+    }
+
+    // A product naming a board under a repository that tracks nothing is
+    // naming a destination in a system nothing here uses. Silently accepted it
+    // is a key somebody set and believed, which is the fault the root-only
+    // rules above exist to prevent.
+    if (
+        options.rootDeclaresTracker === false
+        && profile.tracker.project !== undefined
+    ) {
+        add(
+            "tracker.project",
+            "tracker.projectWithoutTracker",
+            "`tracker.project` names a board, but the root profile declares no "
+                + "tracker.",
+            "Remove it, or declare `tracker.backend` in the root "
+                + "project-profile.yaml. Where the repository tracks nothing, "
+                + "there is no system for this board to live in.",
         );
     }
 
@@ -640,6 +694,26 @@ export function looksLikeRepositoryRoot(source: string): boolean {
     // that lives under a key a product profile may also use. A nested repo
     // declaring nothing but a tracker and its docs would otherwise be adopted
     // as a product of this one.
-    return isRecord(raw.tracker)
-        && typeof raw.tracker.backend === "string";
+    if (isRecord(raw.tracker) && typeof raw.tracker.backend === "string") {
+        return true;
+    }
+
+    // Since a repository may declare no tracker at all, the check above no
+    // longer catches every nested root: one carrying only `docs` and `mode` has
+    // nothing repo-wide left to recognise it by. What still separates the two
+    // is what the document claims. `paths`, `roadmap` and `tracker.project` are
+    // a product's own settings, and a document carrying any of them is claiming
+    // to be a product however badly it is written. An unnamed one is then a
+    // fault worth reporting as `products.unnamed`, and swallowing it here as a
+    // boundary would be exactly the silent skip this function must not perform.
+    const claimsToBeAProduct = Object.hasOwn(raw, "paths")
+        || Object.hasOwn(raw, "roadmap")
+        || (isRecord(raw.tracker) && Object.hasOwn(raw.tracker, "project"));
+    if (claimsToBeAProduct) {
+        return false;
+    }
+
+    return Object.hasOwn(raw, "docs")
+        || Object.hasOwn(raw, "mode")
+        || Object.hasOwn(raw, "tracker");
 }

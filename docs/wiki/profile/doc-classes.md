@@ -45,4 +45,11 @@ in-repo, the file the profile names as the tracker has to be matched by a
 gitignored tracker is unreachable the same way, since the rules run over the
 files git can see.
 
+The class runs in the other direction too. Declaring `tracker` globs under an
+external backend is `docs.trackerClass`, because a file in the repository
+carrying task state would be a second authority, and declaring them where the
+profile names no tracker at all is the same error with a different reason: the
+class would mark a file as the authority for a fact this repository decided not
+to keep.
+
 What each class then costs its documents is in [[validators/docs-checks]].

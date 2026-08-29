@@ -34,8 +34,11 @@ step below.
    milestone, and a page behind the code is the expected state between
    milestones rather than a fault. The table is in
    [mode](../doctrine.md#mode).
-3. Say when the last sweep was, if you can tell. The tracker knows: a sweep is
-   a task like any other and leaves an entry behind.
+3. Say when the last sweep was, if you can tell. Where the repository declares a
+   tracker and sweeps are recorded there, it knows: a sweep is a task like any
+   other and leaves an entry behind. Where it declares none, nothing knows, and
+   the honest answer is that the date cannot be established rather than a guess
+   from commit dates.
 
 ## The sweep
 
@@ -195,8 +198,12 @@ Four things, and the fourth is the one that gets dropped:
   the worklist is a normal outcome. A sweep that says it swept is not.
 
 The report goes where the finish note goes, which
-[task-tracking](../task-tracking/SKILL.md) decides. A sweep is a task: it has a
-tracker entry, and its evidence is the runs above and their counts.
+[task-tracking](../task-tracking/SKILL.md) decides. Where the sweep was recorded
+as a task it has a tracker entry, and its evidence is the runs above and their
+counts. Where the repository tracks nothing, or the sweep was simply asked for,
+the report is the reply: the same counts, said rather than filed. What it must
+not become is a file of its own, which would be a second authority narrating
+progress.
 
 ## Finish
 

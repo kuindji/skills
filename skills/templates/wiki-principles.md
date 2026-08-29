@@ -76,4 +76,6 @@ built around, and the wiki is where it lands most easily.
 
 If a page needs to say what is currently in flight, link to the tracker instead
 of restating it. The tracker is the only authority on what is intended and
-whether it is done.
+whether it is done. Where this repository declares no tracker there is no such
+authority, and the page still does not carry the sentence: what is in flight is
+then a fact this repository does not keep, rather than one a wiki page inherits.

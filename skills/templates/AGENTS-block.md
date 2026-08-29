@@ -25,7 +25,15 @@ Read before changing anything in this repository.
 - **Tracker**: the file `tracker.file` names, or the board `tracker.project`
   names inside the system `tracker.backend` declares. It is the only authority
   on what is intended and whether a piece of work is done, so no other file
-  here narrates that.
+  here narrates that. Where the profile declares no tracker, nothing here
+  answers those questions and no other file may take the job.
+- **Recording**: an agent writes to the tracker when it is asked to, or when a
+  Taskflow `tracker-ref` names the item, and not otherwise.
+  <!-- If work here is recorded as a matter of course, replace that sentence
+  with "Every task in this repository is recorded in the tracker." and delete
+  this comment. This line is the only place a repository can ask for that: no
+  validator can check whether an agent volunteered a tracker write, so it is a
+  convention the project owns rather than a setting in the profile. -->
 
 Resolve the profile that governs the path you are about to touch before you
 start, and say which product and which mode you resolved. A wrong reading

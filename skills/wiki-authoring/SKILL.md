@@ -15,7 +15,7 @@ The reasoning is in [the spine](../doctrine.md#the-spine) and
 | Sentence                                              | Home                            |
 | ----------------------------------------------------- | ------------------------------- |
 | Pricing reads the rate table on every request         | the wiki                        |
-| We are moving pricing off the legacy table            | the tracker                     |
+| We are moving pricing off the legacy table            | the tracker, or nowhere         |
 | We picked the rate table over per-item prices because | a spec under the docs root      |
 | p95 was 240ms on the build of the 12th                | a checklist, or the finish note |
 | Pricing was moved off the legacy table in August      | nowhere                         |
@@ -24,6 +24,11 @@ The last row is the one that gets written anyway. The wiki says what is true
 now, so the migration that produced it is either still true, in which case say
 it without the date, or finished, in which case it is history and the page is
 about the system rather than about the work.
+
+The second row reads "or nowhere" because a repository may declare no tracker. A
+wiki page is not the fallback: where nothing answers what is intended, the page
+still only says what is true now, and the sentence about work in flight simply
+does not get written.
 
 ## Read before writing
 

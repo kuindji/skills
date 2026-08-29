@@ -35,6 +35,10 @@ paths: [apps/notes-app, "packages/notes-*", docs/notes-app]
 # the root profile declares. Which backend it is stays repo-wide: two products
 # disagreeing about where issue state lives would each be right about their own
 # docs and wrong about the repository they share.
+#
+# Drop this block where the root profile declares no tracker. A board named
+# under a repository that tracks nothing points at a system nothing here uses,
+# and that reports as `tracker.projectWithoutTracker`.
 tracker:
   project: notes-app
 

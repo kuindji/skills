@@ -17,6 +17,11 @@ Read before changing anything in this repository.
 - **Tracker**: the file `tracker.file` in the profile names. It is the only
   authority on what is intended and whether a piece of work is done, so no
   other file here narrates that.
+- **Recording**: every task in this repository is recorded in the tracker. That
+  is this repository's own rule and it lives here rather than in the profile,
+  because no validator can check whether an agent volunteered a tracker write.
+  Elsewhere the default holds: an agent records work when it is asked to, or
+  when a Taskflow `tracker-ref` names the item.
 
 Resolve the profile that governs the path you are about to touch before you
 start, and say which product and which mode you resolved. A wrong reading

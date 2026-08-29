@@ -13,9 +13,12 @@ reasoning is in [the spine](../doctrine.md#the-spine) and
 [one authoritative home per fact](../doctrine.md#one-authoritative-home-per-fact).
 
 A document is the wrong home for what is true now, which is the wiki's, for
-what is intended or done, which is the tracker's, and for what was observed on
-one build, which is a checklist row. Writing any of those here creates a second
-authority that nothing keeps in step.
+what is intended or done, which is the tracker's where the repository declares
+one, and for what was observed on one build, which is a checklist row. Writing
+any of those here creates a second authority that nothing keeps in step. Where
+there is no tracker, "intended or done" has no home at all, and a document is
+still the wrong one: absence of an authority is not a vacancy for the nearest
+file to fill.
 
 ## Read before writing
 

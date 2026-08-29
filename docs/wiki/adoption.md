@@ -37,9 +37,9 @@ the one this repository runs.
 
 Six files leave the package and belong to whoever copied them: the root
 profile, a product profile where a repository holds more than one product, the
-tracker where task state lives in the repository rather than on a board, the
-house rules, the wiki principles, and the block that goes into the repository's
-agent instructions. Each opens with a header saying where it goes and what to
+tracker where task state lives in the repository rather than on a board or
+nowhere at all, the house rules, the wiki principles, and the block that goes
+into the repository's agent instructions. Each opens with a header saying where it goes and what to
 edit. `TEMPLATE_PATH` is where the root profile is copied from, written as the
 dependency path a consuming repository sees rather than as a path inside this
 one, and a test keeps it pointing at a file that ships: it is the one string

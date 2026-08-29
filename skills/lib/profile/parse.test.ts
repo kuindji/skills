@@ -76,6 +76,90 @@ tracker:
         expect(result.diagnostics).toEqual([]);
         expect(result.profile?.tracker.file).toBe("docs/tasks.md");
     });
+
+    test("todo-tray is a backend", () => {
+        const result = parse(`
+tracker:
+  backend: todo-tray
+  project: SKL
+`);
+        expect(result.diagnostics).toEqual([]);
+        expect(result.profile?.tracker.backend).toBe("todo-tray");
+    });
+
+    test("taskflow is no longer a backend", () => {
+        const result = parse(`
+tracker:
+  backend: taskflow
+`);
+        const d = result.diagnostics.find((d) => d.rule === "tracker.backend");
+        expect(d).toBeDefined();
+        expect(d?.message).toContain("taskflow");
+        expect(d?.remedy).toContain("todo-tray");
+    });
+
+    /**
+     * The case the whole schema change exists for. A repository that tracks
+     * nothing declares no tracker, and absence is a configuration rather than
+     * the half-written block below.
+     */
+    test("a profile declaring no tracker at all is valid", () => {
+        const result = parse("mode:\n  default: greenfield\n");
+        expect(result.diagnostics).toEqual([]);
+        expect(result.profile?.tracker.backend).toBeUndefined();
+    });
+
+    test("an empty tracker mapping is a half-written declaration", () => {
+        const result = parse("tracker: {}\n");
+        const d = result.diagnostics.find((d) => d.rule === "tracker.backend");
+        expect(d).toBeDefined();
+        expect(d?.severity).toBe("error");
+        expect(d?.remedy).toContain("remove the `tracker` block");
+    });
+
+    test("a tracker key with nothing under it is malformed", () => {
+        const result = parse("tracker:\n");
+        const d = result.diagnostics.find((d) => d.rule === "tracker.shape");
+        expect(d).toBeDefined();
+        expect(d?.severity).toBe("error");
+    });
+
+    test("a scalar tracker is malformed", () => {
+        const result = parse("tracker: in-repo\n");
+        expect(
+            result.diagnostics.some((d) => d.rule === "tracker.shape"),
+        ).toBe(true);
+    });
+
+    test("a product naming a board under a trackerless root is rejected", () => {
+        const result = parseProfile(
+            "product: p\npaths: [src]\ntracker:\n  project: SKL\n",
+            "/repo/docs/p/project-profile.yaml",
+            { kind: "product", rootDeclaresTracker: false },
+        );
+        const d = result.diagnostics.find(
+            (d) => d.rule === "tracker.projectWithoutTracker",
+        );
+        expect(d).toBeDefined();
+        expect(d?.severity).toBe("error");
+    });
+
+    test("a product may name a board where the root declares one", () => {
+        const result = parseProfile(
+            "product: p\npaths: [src]\ntracker:\n  project: SKL\n",
+            "/repo/docs/p/project-profile.yaml",
+            {
+                kind: "product",
+                rootDeclaresTracker: true,
+                inherit: { trackerBackend: "todo-tray" },
+            },
+        );
+        expect(
+            result.diagnostics.some(
+                (d) => d.rule === "tracker.projectWithoutTracker",
+            ),
+        ).toBe(false);
+    });
 });
 
 describe("owners", () => {
@@ -270,14 +354,21 @@ describe("root versus product profiles", () => {
         expect(d?.remedy).toContain("root project-profile.yaml");
     });
 
-    test("a root profile still requires a tracker backend", () => {
+    /**
+     * The reverse of what this rule used to say. A root profile naming no
+     * tracker was an error until tracking became opt-in, which made a
+     * repository that tracks nothing impossible to describe. What is still an
+     * error is a `tracker` block that names no backend, which is tested above.
+     */
+    test("a root profile need not declare a tracker", () => {
         const result = parseProfile(
             "product: p\n",
             "/repo/project-profile.yaml",
         );
         expect(
             result.diagnostics.some((d) => d.rule === "tracker.backend"),
-        ).toBe(true);
+        ).toBe(false);
+        expect(result.profile?.tracker.backend).toBeUndefined();
     });
 });
 

@@ -299,6 +299,44 @@ tracker:
     });
 
     /**
+     * Once a repository may declare no tracker, the tracker check no longer
+     * recognises every nested root. One carrying nothing but a docs root and a
+     * mode has no repo-wide key left to be known by, and read as a product it
+     * would claim this repo's paths.
+     */
+    test("a nested repo declaring no tracker is still a boundary", async () => {
+        await withRepo({
+            "project-profile.yaml": ROOT,
+            "fixtures/trackerless/project-profile.yaml":
+                "docs:\n  root: docs\nmode:\n  default: greenfield\n",
+        }, async (directory) => {
+            const result = await loadProfiles(directory);
+            expect(result.boundaries).toEqual([ "fixtures/trackerless" ]);
+            expect(result.diagnostics).toEqual([]);
+        });
+    });
+
+    /**
+     * The other half of the same rule, and the reason the boundary test cannot
+     * simply be "declares no product". A document claiming paths is claiming to
+     * be a product however badly it is written, and an unnamed one is a fault
+     * to report rather than a repository to skip.
+     */
+    test("an unnamed profile claiming paths is reported, not skipped", async () => {
+        await withRepo({
+            "project-profile.yaml": ROOT,
+            "docs/notes/project-profile.yaml":
+                "paths: [apps/notes]\ndocs:\n  root: docs/notes\n",
+        }, async (directory) => {
+            const result = await loadProfiles(directory);
+            expect(result.boundaries).toEqual([]);
+            expect(result.diagnostics.map((d) => d.rule)).toContain(
+                "products.unnamed",
+            );
+        });
+    });
+
+    /**
      * Unreadable YAML must not be mistaken for a boundary. The skip is silent
      * by design, so a profile that vanished into it would take its syntax
      * error along.

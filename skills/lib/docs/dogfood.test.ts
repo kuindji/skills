@@ -60,6 +60,7 @@ describe("this repo's docs classify cleanly", () => {
         const { profile } = parseProfile(await Bun.file(file).text(), file);
         const result = await validateDocs(profile!, root);
         expect(result.lifecycle.map((doc) => doc.path)).toEqual([
+            "docs/specs/2026-08-29-optional-tracking.md",
             "docs/specs/2026-08-27-project-management-skills-design.md",
         ]);
         expect(result.diagnostics).toEqual([]);

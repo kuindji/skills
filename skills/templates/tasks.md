@@ -2,8 +2,11 @@
 
 Copy this file to the path `tracker.file` names in the profile, then own it. It
 is only needed where `tracker.backend` is `in-repo`; under ClickUp, Linear or
-Taskflow the board is the tracker and this file should not exist, because a
-second place carrying task state is a second answer nothing keeps in step.
+todo-tray the board is the tracker and this file should not exist, because a
+second place carrying task state is a second answer nothing keeps in step. Where
+the profile declares no tracker at all, this file should not exist either: the
+repository has decided that nothing here answers what is intended or whether it
+is done.
 
 This file is the tracker. It is the sole authority on what is intended and
 whether a piece of work is done, and no other file in this repository carries

@@ -42,8 +42,8 @@ freeze.
 
 | Fact                            | Home                               |
 | ------------------------------- | ---------------------------------- |
-| What we intend to build         | tracker, always                    |
-| Whether a piece of work is done | tracker status, nowhere else       |
+| What we intend to build         | tracker, or nothing                |
+| Whether a piece of work is done | tracker status, or nothing         |
 | What ships when, in order       | roadmap doc, or nothing            |
 | Evidence it actually works      | checklist rows, or the finish note |
 | How it will be built            | plan or spec doc                   |
@@ -58,11 +58,32 @@ second authority and is not.
 has no ordered list of what lands when, and inventing one gives it a document
 that nobody updates. Absence of a roadmap is a configuration, not an omission.
 
-The rule about the tracker holds whether the tracker is ClickUp, Linear, or a
-markdown file in the repo. With an external tracker it holds trivially, since no
-other system can carry issue state. With `tracker.backend: in-repo` it needs
-saying out loud: the file named in the profile is the sole authority, and any
-other file in the repo that narrates what is in progress is in violation.
+**The general form of that, which governs every axis in this file: if an axis is
+not defined, there is nothing to do on it unless told.** A profile declares what
+this repository has. What it leaves out, this repository does not have, and a
+rule with no subject does not fire. The one thing an agent must never do is
+supply the missing configuration itself, because a home invented on the spot is a
+second authority that nothing else knows about.
+
+The tracker rows carry "or nothing" for the same reason. A repository may declare
+no tracker, and then nothing here answers what is intended or whether it is done.
+Work still finishes and is still claimed, in the session and with its evidence,
+but that claim does not persist and nothing in the repository is its home.
+Checklist rows, where a product declares them, stay durable and keep carrying
+evidence, which is a different fact: a ticked row says a thing was observed, not
+that a piece of work is finished.
+
+Where a tracker **is** declared, "or nothing" stops applying and the old rule
+holds in full, whether the tracker is ClickUp, Linear, todo-tray, or a markdown
+file in the repo. With an external tracker it holds trivially, since no other
+system can carry issue state. With `tracker.backend: in-repo` it needs saying out
+loud: the file named in the profile is the sole authority, and any other file in
+the repo that narrates what is in progress is in violation.
+
+Declaring a tracker is not the same as instructing an agent to write to one. The
+block says where task state lives and how to reach it, which is what an agent
+needs when it is asked to record something. Whether it is asked is not a schema
+question, and [task-tracking](task-tracking/SKILL.md) holds the answer.
 
 ## Names and positions
 
@@ -138,11 +159,16 @@ first line instead of in the diff.
 | breaking changes | free                          | need a migration path                 |
 | refactor         | rewrite freely                | blast-radius check on consumers first |
 | done means       | acceptance evidence           | shipped, wiki updated, no regression  |
-| tracker          | may be in-repo                | external, ticket per change           |
+| tracker          | may be in-repo                | external, and the ticket is the unit  |
 
 Per path, not per project, so a greenfield subsystem inside a mature repo does
 not inherit mature ceremony and a hardened package inside a young app does not
 lose it.
+
+The tracker row describes the shape a tracker takes where the repository has
+one. It does not say every repository has one: that is the profile's answer, not
+the mode's. What mature adds is that where a tracker is declared, the ticket
+rather than the commit is the unit of change.
 
 A change that touches both does not pick one mode. Each touched path keeps its
 own gates. Split the change only if the parts are independently valid, which
@@ -242,6 +268,15 @@ none, as a repo on continuous delivery reasonably does, evidence means the
 command and its output in the finish note. The
 obligation is constant either way.
 
+Where the repository declares no tracker there is no tracker state, so there is
+no done in this sense. The evidence half of the rule survives on its own and is
+the whole of what can be said: name the command and what it reported, in the
+session, and claim nothing beyond it. What must not happen is inventing a home
+for the missing half. A status paragraph in a README, a progress note in a plan,
+a finish note written into whatever file is nearest: each is a second authority
+for a fact this repository decided not to keep, and the reader who finds it has
+no way to know it was never maintained.
+
 ## Where the rules are enforced
 
 Seven bins, runnable by any agent and by CI. Each takes `--repo <dir>` and
@@ -285,7 +320,7 @@ the manual version has run often enough to say what is worth declaring.
 | ---------------- | -------------------------------------------------------------------- |
 | `wiki-authoring` | creating or editing a wiki page; in mature mode, at feature end      |
 | `project-docs`   | writing a spec, plan, research note or handover, and on shipping one |
-| `task-tracking`  | at task start, at ticket writes, and at finish                       |
+| `task-tracking`  | at task start, and at any tracker write it has been asked for        |
 | `housekeeping`   | on request, at a once-a-week-or-two cadence                          |
 
 ## Finding the profile that applies

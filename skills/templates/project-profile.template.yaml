@@ -8,10 +8,10 @@
 # A repository holding several products splits them, and the second file is
 # `product-profile.template.yaml` next to this one.
 #
-# Check the result with `bunx profile-validate`. Every key below is optional
-# except `tracker`, and a key left out is not a gap: absence is a
-# configuration. A repository with no wiki drops the `wiki` block, and the
-# rules that read it stop running rather than failing.
+# Check the result with `bunx profile-validate`. Every key below is optional,
+# and a key left out is not a gap: absence is a configuration. A repository with
+# no wiki drops the `wiki` block, and the rules that read it stop running rather
+# than failing. The same is true of `tracker`.
 
 # --- wiki --------------------------------------------------------------------
 
@@ -43,20 +43,34 @@ wiki:
 
 # --- tracker -----------------------------------------------------------------
 
-# Where task state lives. Repo-wide, and the one block a root profile must
-# carry: what is intended and whether it is done have exactly one home, and a
-# repository that does not name it has that fact in no authoritative place.
+# Where task state lives. Repo-wide, and droppable: remove the whole block and
+# this repository tracks nothing, which is a configuration rather than a gap.
+# Nothing then answers what is intended or whether it is done, and no tracking
+# rule fires. Leaving the block in place while naming no backend is the one
+# thing that is an error, because it is a declaration half written rather than a
+# decision.
+#
+# Declaring a tracker says where task state lives and how to reach it. It does
+# not instruct an agent to write to it: an agent records work when it is asked
+# to, or when a Taskflow `tracker-ref` links the session to an item. A
+# repository that wants every task recorded says so in its own AGENTS.md or
+# house rules, which is where a convention no validator can check belongs.
 tracker:
-  # clickup, linear, taskflow, or in-repo.
+  # clickup, linear, todo-tray, or in-repo.
+  #
+  # Taskflow is deliberately not on that list. It is a consumer of this package
+  # and a session tool, not a place issue state lives: see the `taskflow` block
+  # below, which is a different question.
   backend: in-repo
   # Required when the backend is `in-repo`: the one markdown file that holds
   # task state. Give it a `tracker` glob in `docs` below as well, so it is
   # classified as what it is. A tracker no doc class matches is a tracker
   # nothing checks, and that reports as `docs.trackerUnchecked`.
   file: docs/tasks.md
-  # Required for ClickUp or Linear: the board, list, team, or project this
-  # repository's tasks live in. In a multi-product repository this moves to
-  # each product profile, where every product must name its own destination.
+  # Required for ClickUp, Linear or todo-tray: the board, list, team, project,
+  # or todo-tray project code this repository's tasks live in. In a
+  # multi-product repository this moves to each product profile, where every
+  # product must name its own destination.
   # project: platform
 
 # --- taskflow ----------------------------------------------------------------
@@ -68,7 +82,7 @@ tracker:
 # A running commentary on work in progress belongs in the tracker nowhere, and
 # that holds whether this is true or false. What this decides is whether the
 # commentary has a home at all: where it is true, `taskflow-cli log` is that
-# home.
+# home. It says the CLI is here, not that an agent should be logging to it.
 taskflow:
   enabled: false
 

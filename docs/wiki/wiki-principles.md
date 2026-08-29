@@ -58,5 +58,5 @@ has one of those.
 ## What does not go here
 
 Status, dates and progress. Whether a piece of work is done lives in the
-tracker the profile names, and every page here is written as though the work
-that produced it never happened.
+tracker the profile names, or nowhere at all where it names none, and every page
+here is written as though the work that produced it never happened.
